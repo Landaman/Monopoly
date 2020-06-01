@@ -17,9 +17,8 @@ public interface Player {
      * Moves the Player forward by spaces
      *
      * @param spaces the number of spaces to move the Player forward by
-     * @return the index of the Space the Player is on after moving
      */
-    int move(int spaces);
+    void move(int spaces);
 
     /**
      * Prompts the Player if they would like to do something
