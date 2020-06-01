@@ -555,13 +555,9 @@ public class Game {
                         Objects.requireNonNull(playerHasJailCard(player, DECKS)).setOwner(null); //This won't produce a NullPointerException as we check for it
                         player.move(calcRollTotal(rolls));
                     }
-                } else if (player.promptBoolean("Would you like to pay your bail?")) { //If the Player wants to pay their bail, we should let them go
-                    if (player.canAfford(-JAIL_BAIL)) {
-                        player.updateWallet(-JAIL_BAIL);
-                        player.move(calcRollTotal(rolls));
-                    } else {
-                        player.cannotAffordOptional();
-                    }
+                } else if (player.canAfford(JAIL_BAIL) && player.promptBoolean("Would you like to pay your bail?")) { //If the Player wants to pay their bail, we should let them go
+                    player.updateWallet(-JAIL_BAIL);
+                    player.move(calcRollTotal(rolls));
                 } else if (player.getTurnInJail() == 1) {
                     player.updateWallet(-JAIL_BAIL);
                     player.move(calcRollTotal(rolls));
@@ -682,13 +678,9 @@ public class Game {
         GAME_UI.showProperty(property);
         if (property != null && player != null) {
             if (property.getOwner() == null) { //If this is the case, the Player can buy the Property
-                if (player.promptBoolean("Would you like to buy " + property + " for " +
+                if (player.canAfford(property.getPRICE()) && player.promptBoolean("Would you like to buy " + property + " for " +
                         property.getPRICE() + "?")) { //If this is the case, the Player will buy the Property
-                    if (player.canAfford(property.getPRICE())) {
-                        player.updateWallet(property.getPRICE());
-                    } else {
-                        player.cannotAffordOptional();
-                    }
+                    player.updateWallet(property.getPRICE());
                     property.setOwner(player);
                 } else { //If they didn't choose to buy it, we need to run an auction now
                     handleAuction(property);
@@ -796,16 +788,21 @@ public class Game {
      * @param unMortgageableProperties the Properties owned by the Player that are eligible to be un-mortgaged
      * @throws IllegalArgumentException when a null or empty parameter is passed
      */
-    private void promptUnMortgage(Player player, Property[] unMortgageableProperties) {
-        if (player != null && unMortgageableProperties != null && unMortgageableProperties.length > 0) {
-            while (unMortgageableProperties.length > 0) {
-                int result = player.promptArray("Would you like to un-mortgage any properties?", unMortgageableProperties);
-                if (result >= 0 && result < unMortgageableProperties.length) {
-                    if (unMortgageableProperties[result].getOwner().equals(player)) {
-                        unMortgageableProperties[result].unMortgage();
-                        unMortgageableProperties = playerMortgagedProperties(GAME_BOARD, player);
+    private void promptUnMortgage(Player player, ArrayList<Property> unMortgageableProperties) {
+        if (player != null && unMortgageableProperties != null && unMortgageableProperties.size() > 0) {
+            while (unMortgageableProperties.size() > 0) {
+                unMortgageableProperties.removeIf(property -> (!player.canAfford((int) (Math.round(property.getMORTGAGE() * 1.1)))));
+                if (unMortgageableProperties.size() > 0) {
+                    int result = player.promptArrayList("Would you like to un-mortgage any properties?", unMortgageableProperties);
+                    if (result >= 0 && result < unMortgageableProperties.size()) {
+                        if (unMortgageableProperties.get(result).getOwner().equals(player)) {
+                            unMortgageableProperties.get(result).unMortgage();
+                            unMortgageableProperties = new ArrayList<>(Arrays.asList(playerMortgagedProperties(GAME_BOARD, player)));
+                        } else {
+                            throw new IllegalArgumentException("A Property that wasn't owned by the Player was passed");
+                        }
                     } else {
-                        throw new IllegalArgumentException("A Property that wasn't owned by the Player was passed");
+                        break;
                     }
                 } else {
                     break;
@@ -823,16 +820,21 @@ public class Game {
      * @param buildableProperties the Properties owned by the Player that are eligible to be built on
      * @throws IllegalArgumentException when a null or empty parameter is passed
      */
-    private void promptBuyBuildings(Player player, Property[] buildableProperties) {
-        if (player != null && buildableProperties != null && buildableProperties.length > 0) {
-            while (buildableProperties.length > 0) {
-                int result = player.promptArray("Would you like to build on any properties?", buildableProperties);
-                if (result >= 0 && result < buildableProperties.length) {
-                    if (buildableProperties[result].getOwner().equals(player)) {
-                        buildableProperties[result].buyHouse();
-                        buildableProperties = playerBuildableProperties(GAME_BOARD, player);
+    private void promptBuyBuildings(Player player, ArrayList<Property> buildableProperties) {
+        if (player != null && buildableProperties != null && buildableProperties.size() > 0) {
+            while (buildableProperties.size() > 0) {
+                buildableProperties.removeIf(property -> (!player.canAfford(property.getBUILD_PRICE())));
+                if (buildableProperties.size() > 0) {
+                    int result = player.promptArrayList("Would you like to build on any properties?", buildableProperties);
+                    if (result >= 0 && result < buildableProperties.size()) {
+                        if (buildableProperties.get(result).getOwner().equals(player)) {
+                            buildableProperties.get(result).buyHouse();
+                            buildableProperties = new ArrayList<>(Arrays.asList(playerBuildableProperties(GAME_BOARD, player)));
+                        } else {
+                            throw new IllegalArgumentException("A Property that wasn't owned by a Player was passed");
+                        }
                     } else {
-                        throw new IllegalArgumentException("A Property that wasn't owned by a Player was passed");
+                        break;
                     }
                 } else {
                     break;
@@ -885,11 +887,11 @@ public class Game {
         }
 
         if (playerMortgagedProperties(GAME_BOARD, player).length > 0) { //If the Player can un-mortgage any Properties, we should ask
-            promptUnMortgage(player, playerMortgagedProperties(GAME_BOARD, player));
+            promptUnMortgage(player, new ArrayList<>(Arrays.asList(playerMortgagedProperties(GAME_BOARD, player))));
         }
 
         if (playerBuildableProperties(GAME_BOARD, player).length > 0) { //If the Player can buy any buildings, we should ask
-            promptBuyBuildings(player, playerBuildableProperties(GAME_BOARD, player));
+            promptBuyBuildings(player, new ArrayList<>(Arrays.asList(playerBuildableProperties(GAME_BOARD, player))));
         }
 
         Trade trade;

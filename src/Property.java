@@ -228,18 +228,32 @@ public class Property {
     }
 
     /**
+     * Gets the mortgage cost of this Property
+     *
+     * @return the mortgage cost of this Property
+     */
+    public int getMORTGAGE() {
+        return MORTGAGE;
+    }
+
+    /**
+     * Gets the cost of building on this Property
+     *
+     * @return the cost of builidng on this Property
+     */
+    public int getBUILD_PRICE() {
+        return BUILD_PRICE;
+    }
+
+    /**
      * Builds a house/hotel on this Property
      *
      * @throws IllegalStateException when the Property is in a state that prevents houses from being bought
      */
     public void buyHouse() {
-        if (canBuild() && validateProperty() && owner != null) {
-            if (owner.canAfford(BUILD_PRICE)) {
-                owner.updateWallet(-BUILD_PRICE);
-                numHouses++;
-            } else {
-                owner.cannotAffordOptional();
-            }
+        if (canBuild() && validateProperty() && owner != null && owner.canAfford(BUILD_PRICE)) {
+            owner.updateWallet(-BUILD_PRICE);
+            numHouses++;
         } else {
             throw new IllegalStateException("Property is in an illegal state for construction");
         }
@@ -279,14 +293,10 @@ public class Property {
      * @throws IllegalStateException when the Property is in a state that prevents it form being un-mortgaged
      */
     public void unMortgage() {
-        if (isMortgaged && validateProperty()) {
-            int cost = (int) Math.round((-MORTGAGE * 1.1));
-            if (owner.canAfford(cost)) {
-                owner.updateWallet(cost);
-                isMortgaged = false;
-            } else {
-                owner.cannotAffordOptional();
-            }
+        int cost = (int) Math.round((-MORTGAGE * 1.1));
+        if (isMortgaged && validateProperty() && owner.canAfford(cost)) {
+            owner.updateWallet(cost);
+            isMortgaged = false;
         } else {
             throw new IllegalStateException("Property is in an un-un-mortgageable state");
         }

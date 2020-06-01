@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * Represents a Player
  *
@@ -48,6 +50,15 @@ public interface Player {
     int promptArray(String description, Object[] objects);
 
     /**
+     * Prompts the Player to pick an Object out of the provided ArrayList
+     *
+     * @param description the description that should be shown to the player
+     * @param objects     the ArrayList that the Player should pick from
+     * @return the index of the chosen Object
+     */
+    int promptArrayList(String description, ArrayList objects);
+
+    /**
      * Prompts the Player if they would like to start a trade with any of the Players in players
      *
      * @param description the description that should be shown to the Player
@@ -66,7 +77,7 @@ public interface Player {
     /**
      * Gets whether the Player can afford their purchase
      *
-     * @param the amount of the purchase
+     * @param amount amount of the purchase
      * @return whether the Player can afford their purchase
      */
     boolean canAfford(int amount);
