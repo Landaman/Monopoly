@@ -8,17 +8,17 @@ public class GameCreator {
             //Space parameters
             String[] spaceNames, int[] spaceMoneyLosses, int[] spaceMovementLosses, int[] spaceSpaceLosses,
             int[] spaceDeckUsed, String[] spaceColorGroups, int[] spacePerHouses,
-            int[] spacePerHotels,
+            int[] spacePerHotels, String[] prompts,
             //Property parameters
-            boolean[] spaceHaveProperty, int[] propertyPrices, int[] propertyMortgages, int[] propertyBuildPrices,
-            String[] propertyColorGroups, int[] propertyMaxHouses, int[][] propertyRents, int[] propertyStartingHouses,
-            boolean[] propertyAreDiceMultipliers, boolean[] propertyAreScaled, boolean[] propertyAreMortgaged,
-            Player[] propertyOwners,
+            boolean[] spaceHaveProperty, int[] propertyPrices, int[] propertyMortgages, double[] propertyMortgagePercent,
+            int[] propertyBuildPrices, String[] propertyColorGroups, int[] propertyMaxHouses, int[][] propertyRents,
+            int[] propertyStartingHouses, boolean[] propertyAreDiceMultipliers, boolean[] propertyAreScaled,
+            boolean[] propertyAreMortgaged, Player[] propertyOwners,
             //Game parameters
             String[] colorGroups, int jailPosition, int bailCost,
             //Player parameters
             String[] playerNames, String[] playerTypes, int[] playerWallets, int[] playerPositions,
-            int[] playerJailCards, int[] playerSalaries,
+            int[] playerJailCards, int[] playerSalaries, int[] numTurnsInJail,
             //Dice parameters
             int numDice, int diceSides,
             //Deck parameters
@@ -30,16 +30,16 @@ public class GameCreator {
                 spaceNames, spaceMoneyLosses, spaceMovementLosses, spaceSpaceLosses, spaceColorGroups, spacePerHouses,
                 spacePerHotels, spaceDeckUsed, cardTypes.length,
                 //Property parameters
-                spaceHaveProperty, propertyPrices, propertyMortgages,
+                spaceHaveProperty, propertyPrices, propertyMortgages, propertyMortgagePercent,
                 propertyBuildPrices, propertyColorGroups, propertyMaxHouses, propertyRents, propertyStartingHouses,
                 propertyAreDiceMultipliers, propertyAreScaled, propertyAreMortgaged, propertyOwners);
         Player[] players = setupPlayers(playerNames, playerTypes, playerWallets, playerPositions, spaces.length,
-                playerJailCards, jailPosition, playerSalaries);
+                playerJailCards, jailPosition, playerSalaries, numTurnsInJail, prompts);
         Dice[] dice = setupDice(numDice, diceSides);
         Deck[] deck = setupDecks(cardTypes, cardDescriptions, cardMoneyLosses, cardPerPlayer, cardMovementLosses,
                 cardSpaceLosses, cardColorGroup, cardPerHouses, cardPerHotels, cardGetOutJail, cardOwners, spaces.length);
 
-        return new Game(spaces, colorGroups, jailPosition, bailCost, dice, deck, );
+        return new Game();
     }
 
     /*
@@ -82,9 +82,10 @@ public class GameCreator {
             String[] names, int[] moneyLosses, int[] movementLosses, int[] spaceLosses, String[] colorGroups,
             int[] perHouses, int[] perHotels, int[] deckUsed, int numDecks,
             //Property parameters
-            boolean[] haveProperty, int[] propertyPrices, int[] propertyMortgages, int[] propertyBuildPrices,
-            String[] propertyColorGroups, int[] propertyMaxHouses, int[][] propertyRents, int[] propertyStartingHouses,
-            boolean[] propertyAreDiceMultiplier, boolean[] propertyAreScaled, boolean[] propertyAreMortgaged,
+            boolean[] haveProperty, int[] propertyPrices, int[] propertyMortgages, double[] propertyMortgagePercent,
+            int[] propertyBuildPrices, String[] propertyColorGroups, int[] propertyMaxHouses, int[][] propertyRents,
+            int[] propertyStartingHouses, boolean[] propertyAreDiceMultiplier, boolean[] propertyAreScaled,
+            boolean[] propertyAreMortgaged,
             Player[] propertyOwners) {
         if (names != null && moneyLosses != null && movementLosses != null && spaceLosses != null && //Space validation
                 colorGroups != null && perHouses != null && perHotels != null && deckUsed != null &&
@@ -93,13 +94,13 @@ public class GameCreator {
                 colorGroups.length == perHouses.length && perHouses.length == perHotels.length &&
                 perHotels.length == deckUsed.length &&
                 //Property validation
-                haveProperty != null && propertyPrices != null && propertyMortgages != null &&
+                haveProperty != null && propertyPrices != null && propertyMortgages != null && propertyMortgagePercent != null &&
                 propertyBuildPrices != null && propertyColorGroups != null && propertyMaxHouses != null &&
                 propertyRents != null && propertyStartingHouses != null && propertyAreDiceMultiplier != null &&
                 propertyAreScaled != null && propertyAreMortgaged != null && propertyOwners != null &&
                 deckUsed.length == haveProperty.length && haveProperty.length == propertyPrices.length &&
-                propertyPrices.length == propertyMortgages.length &&
-                propertyMortgages.length == propertyBuildPrices.length &&
+                propertyPrices.length == propertyMortgages.length && propertyMortgages.length == propertyMortgagePercent.length &&
+                propertyMortgagePercent.length == propertyBuildPrices.length &&
                 propertyBuildPrices.length == propertyColorGroups.length &&
                 propertyColorGroups.length == propertyMaxHouses.length &&
                 propertyMaxHouses.length == propertyRents.length &&
@@ -115,7 +116,7 @@ public class GameCreator {
                         names[i], moneyLosses[i], movementLosses[i], spaceLosses[i], colorGroups[i], perHouses[i],
                         perHotels[i], deckUsed[i], spaces.length, numDecks,
                         //Property parameters
-                        haveProperty[i], propertyPrices[i], propertyMortgages[i], propertyBuildPrices[i],
+                        haveProperty[i], propertyPrices[i], propertyMortgages[i], propertyMortgagePercent[i], propertyBuildPrices[i],
                         propertyColorGroups[i], propertyMaxHouses[i], propertyRents[i], propertyStartingHouses[i],
                         propertyAreDiceMultiplier[i], propertyAreScaled[i], propertyAreMortgaged[i], propertyOwners[i]);
             }
@@ -144,6 +145,7 @@ public class GameCreator {
      * @param hasProperty              whether or not this Space has a Property. Should be false if not
      * @param propertyPrice            the price of this Property. This should be greater than 0
      * @param propertyMortgage         the mortgage of this Property. This should be greater than 0 and less than the price
+     * @param propertyMortgagePercent  the percent of the Properties mortgage that should be charged as interest
      * @param propertyBuildPrice       the price of building on this Property. This should be greater than 0
      * @param propertyColorGroup       the color group of this Property. This shouldn't be null
      * @param propertyMaxHouses        the maximum number of houses on this Property. This shouldn't be negative
@@ -161,7 +163,7 @@ public class GameCreator {
             String name, int moneyLoss, int movementLoss, int spaceLoss, String colorGroup, int perHouse, int perHotel,
             int deckUsed, int boardSize, int numDecks,
             //Property parameters
-            boolean hasProperty, int propertyPrice, int propertyMortgage, int propertyBuildPrice,
+            boolean hasProperty, int propertyPrice, int propertyMortgage, double propertyMortgagePercent, int propertyBuildPrice,
             String propertyColorGroup, int propertyMaxHouses, int[] propertyRents, int propertyStartingHouses,
             boolean propertyIsDiceMultiplier, boolean propertyIsScaled, boolean propertyIsMortgaged,
             Player propertyOwner) {
@@ -170,7 +172,7 @@ public class GameCreator {
                     //Space creation
                     name, moneyLoss, movementLoss, spaceLoss, colorGroup, perHouse, perHotel, deckUsed, boardSize, numDecks,
                     //Property creation
-                    new Property(propertyPrice, propertyMortgage, propertyBuildPrice, propertyColorGroup,
+                    new Property(propertyPrice, propertyMortgage, propertyMortgagePercent, propertyBuildPrice, propertyColorGroup,
                             propertyMaxHouses, propertyRents, propertyStartingHouses, propertyIsDiceMultiplier,
                             propertyIsScaled, propertyIsMortgaged, propertyOwner, name));
         } else {
@@ -187,27 +189,30 @@ public class GameCreator {
      * Sets up an Array of Players. Validates according to the conditions outlined here. All of these Arrays
      * should have the same length
      *
-     * @param names        the names of the Players to be created. This shouldn't be null
-     * @param types        the types of the Players to be created (human or AI). This shouldn't be null or anything else
-     * @param wallets      the amount of money that should be placed in the Player's wallet
-     * @param positions    the position that the Player should start at
-     * @param boardSize    the max board size, this is used for validation. This shouldn't be 0 or less than any of the
-     *                     position values
-     * @param jailTurns    the number of turns the Player has in jail. Should be 0 for none
-     * @param jailPosition the position of the jail on the board. This must be at a valid position
-     * @param salaries     the salaries the Players should be awarded for passing go
+     * @param names          the names of the Players to be created. This shouldn't be null
+     * @param types          the types of the Players to be created (human or AI). This shouldn't be null or anything else
+     * @param wallets        the amount of money that should be placed in the Player's wallet
+     * @param positions      the position that the Player should start at
+     * @param boardSize      the max board size, this is used for validation. This shouldn't be 0 or less than any of the
+     *                       position values
+     * @param jailTurns      the number of turns the Player has in jail. Should be 0 for none
+     * @param jailPosition   the position of the jail on the board. This must be at a valid position
+     * @param salaries       the salaries the Players should be awarded for passing go
+     * @param numTurnsInJail the number of turns the Player should send in jail when they are sent there
+     * @param prompts        the prompts that are used during the Game. This is only used for the AIPlayer Class
      * @return the created Players Array
      * @throws IllegalArgumentException when a null or mismatched Array is passed
      */
     private static Player[] setupPlayers(String[] names, String[] types, int[] wallets, int[] positions, int boardSize,
-                                         int[] jailTurns, int jailPosition, int[] salaries) {
+                                         int[] jailTurns, int jailPosition, int[] salaries, int[] numTurnsInJail, String[] prompts) {
         if (names != null && types != null && wallets != null && positions != null && jailTurns != null && salaries != null &&
-                names.length == types.length && types.length == wallets.length && wallets.length == positions.length &&
-                positions.length == jailTurns.length && jailTurns.length == salaries.length) {
+                numTurnsInJail != null && names.length == types.length && types.length == wallets.length && wallets.length == positions.length &&
+                positions.length == jailTurns.length && jailTurns.length == salaries.length &&
+                salaries.length == numTurnsInJail.length) {
             Player[] players = new Player[names.length];
             for (int i = 0; i < players.length; i++) {
                 players[i] = setupPlayer(names[i], types[i], wallets[i], positions[i], boardSize, jailTurns[i],
-                        jailPosition, salaries[i]);
+                        jailPosition, salaries[i], numTurnsInJail[i], prompts);
             }
             return players;
         } else {
@@ -219,23 +224,25 @@ public class GameCreator {
      * Sets up a Player using the provided parameter
      * Differentiation between HumanPlayer and AIPlayer occurs here, and does not occur in Game
      *
-     * @param name         the name of the Player to be created. This shouldn't be null
-     * @param type         the type of the Player to be created (human or ai). This shouldn't be null or anything else
-     * @param wallet       the amount of money that should be placed in the Player's wallet
-     * @param position     the position that the Player should start at
-     * @param boardSize    the max board size, this is used for validation This shouldn't be 0 or less than position
-     * @param jailTurns    the number of turns the Player has in jail. Should be 0 for none
-     * @param jailPosition the position of the jail on the game board. This must be at a valid position
-     * @param salary       the salaries the Players should be awarded for passing go. This must be greater than 0
+     * @param name           the name of the Player to be created. This shouldn't be null
+     * @param type           the type of the Player to be created (human or ai). This shouldn't be null or anything else
+     * @param wallet         the amount of money that should be placed in the Player's wallet
+     * @param position       the position that the Player should start at
+     * @param boardSize      the max board size, this is used for validation This shouldn't be 0 or less than position
+     * @param jailTurns      the number of turns the Player has in jail. Should be 0 for none
+     * @param jailPosition   the position of the jail on the game board. This must be at a valid position
+     * @param salary         the salaries the Players should be awarded for passing go. This must be greater than 0
+     * @param numTurnsInJail the number of turns the Player should send in jail when they are sent there
+     * @param prompts        the prompts that are used during the Game. This is only used for the AIPlayer Class
      * @return the created Player Object
      * @throws IllegalArgumentException when type is not ai or human
      */
     private static Player setupPlayer(String name, String type, int wallet, int position, int boardSize, int jailTurns,
-                                      int jailPosition, int salary) {
+                                      int jailPosition, int salary, int numTurnsInJail, String[] prompts) {
         if (type.equals("ai")) {
-            return new AIPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary);
+            return new AIPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary, numTurnsInJail, prompts);
         } else if (type.equals("human")) {
-            return new HumanPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary);
+            return new HumanPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary, numTurnsInJail);
         } else {
             throw new IllegalArgumentException("An invalid type value was passed");
         }

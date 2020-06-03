@@ -7,6 +7,7 @@ public class Property {
     //Property constants
     private final int PRICE; //Stores this Property's buy price. This should be greater than 0
     private final int MORTGAGE; //Stores the value the Player gets when this Property is mortgaged. This should be greater than 0 and less than PRICE
+    private final double MORTGAGE_PERCENT; //Stores the percent of the Mortgage that should be charged as interest
     private final int BUILD_PRICE; //Stores the amount of money the Player needs to pay in order to build more on this land. This should be greater than 0
     private final String COLOR_GROUP; //Stores this Property's color group. This shouldn't be null
     private final int MAX_HOUSES; //Stores this Property's maximum number of houses. This shouldn't be negative
@@ -24,39 +25,41 @@ public class Property {
     /**
      * Constructor for Property. Validates the conditions outlined here
      *
-     * @param propertyPrice          the price of this Property. This should be greater than 0
-     * @param propertyMortgage       the mortgage of this Property. This should be greater than 0 and less than propertyPrice
-     * @param propertyBuildPrice     the price of building on this Property. This should be greater than 0
-     * @param propertyColorGroup     the color group of this Property. This shouldn't be null
-     * @param propertyMaxHouses      the maximum number of houses on this Property. This shouldn't be negative
-     * @param propertyRents          the rents for this Property at given states of ownership. This shouldn't be null
-     * @param propertyStartingHouses the number of houses this Property should start with. This shouldn't be negative.
-     *                               If this is a non-zero value propertyOwner shouldn't be null as you can't have a
-     *                               Property that has houses but no owner
-     * @param isDiceMultiplier       whether or not the rent values are multipliers of the Players roll
-     * @param isScaled               whether or not the rent values scaled based on
-     * @param mortgaged              whether or not this Property is mortgaged. If this is true, the Property must have an owner
-     * @param propertyOwner          the Player who should own this Property. This can be null
-     * @param name                   the name of the Property
+     * @param price            the price of this Property. This should be greater than 0
+     * @param mortgage         the mortgage of this Property. This should be greater than 0 and less than price
+     * @param mortgagePercent  the percent of the Properties mortgage that should be charged as interest
+     * @param buildPrice       the price of building on this Property. This should be greater than 0
+     * @param colorGroup       the color group of this Property. This shouldn't be null
+     * @param maxHouses        the maximum number of houses on this Property. This shouldn't be negative
+     * @param rents            the rents for this Property at given states of ownership. This shouldn't be null
+     * @param startingHouses   the number of houses this Property should start with. This shouldn't be negative.
+     *                         If this is a non-zero value propertyOwner shouldn't be null as you can't have a
+     *                         Property that has houses but no owner
+     * @param isDiceMultiplier whether or not the rent values are multipliers of the Players roll
+     * @param isScaled         whether or not the rent values scaled based on
+     * @param mortgaged        whether or not this Property is mortgaged. If this is true, the Property must have an owner
+     * @param propertyOwner    the Player who should own this Property. This can be null
+     * @param name             the name of the Property
      * @throws IllegalArgumentException when the passed parameters are invalid
      */
-    public Property(int propertyPrice, int propertyMortgage, int propertyBuildPrice, String propertyColorGroup,
-                    int propertyMaxHouses, int[] propertyRents, int propertyStartingHouses, boolean isDiceMultiplier,
+    public Property(int price, int mortgage, double mortgagePercent, int buildPrice, String colorGroup,
+                    int maxHouses, int[] rents, int startingHouses, boolean isDiceMultiplier,
                     boolean isScaled, boolean mortgaged, Player propertyOwner, String name) {
-        if (propertyMortgage < propertyPrice && propertyMortgage > 0 && propertyBuildPrice > 0 &&
-                propertyColorGroup != null && propertyRents != null && propertyRents.length > 0 &&
-                propertyStartingHouses >= 0 && propertyStartingHouses <= propertyMaxHouses &&
-                !(isScaled && propertyMaxHouses != 0) && !(propertyStartingHouses > 0 && propertyOwner == null) &&
-                !(!isScaled && propertyRents.length != propertyMaxHouses + 2) && !(mortgaged && propertyOwner == null) &&
+        if (mortgage < price && mortgage > 0 && buildPrice > 0 &&
+                colorGroup != null && rents != null && rents.length > 0 &&
+                startingHouses >= 0 && startingHouses <= maxHouses &&
+                !(isScaled && maxHouses != 0) && !(startingHouses > 0 && propertyOwner == null) &&
+                !(!isScaled && rents.length != maxHouses + 2) && !(mortgaged && propertyOwner == null) &&
                 name != null) {
-            PRICE = propertyPrice;
-            MORTGAGE = propertyMortgage;
-            BUILD_PRICE = propertyBuildPrice;
-            COLOR_GROUP = propertyColorGroup;
-            MAX_HOUSES = propertyMaxHouses;
-            RENTS = propertyRents;
-            numHouses = propertyStartingHouses;
-            rent = propertyRents[0];
+            PRICE = price;
+            MORTGAGE = mortgage;
+            MORTGAGE_PERCENT = mortgagePercent;
+            BUILD_PRICE = buildPrice;
+            COLOR_GROUP = colorGroup;
+            MAX_HOUSES = maxHouses;
+            RENTS = rents;
+            numHouses = startingHouses;
+            rent = rents[0];
             IS_DICE_MULTIPLIER = isDiceMultiplier;
             IS_SCALED = isScaled;
             isMortgaged = mortgaged;
@@ -237,9 +240,18 @@ public class Property {
     }
 
     /**
+     * Gets the price of un-mortgaging this Property
+     *
+     * @return the price of un-mortgaging this Property
+     */
+    public int getUnMORTGAGE() {
+        return (int) Math.round(MORTGAGE * MORTGAGE_PERCENT);
+    }
+
+    /**
      * Gets the cost of building on this Property
      *
-     * @return the cost of builidng on this Property
+     * @return the cost of building on this Property
      */
     public int getBUILD_PRICE() {
         return BUILD_PRICE;
@@ -248,12 +260,13 @@ public class Property {
     /**
      * Builds a house/hotel on this Property
      *
+     * @return the value owed by the Player who owns this Property
      * @throws IllegalStateException when the Property is in a state that prevents houses from being bought
      */
-    public void buyHouse() {
+    public int buyHouse() {
         if (canBuild() && validateProperty() && owner != null && owner.canAfford(BUILD_PRICE)) {
-            owner.updateWallet(-BUILD_PRICE);
             numHouses++;
+            return -BUILD_PRICE;
         } else {
             throw new IllegalStateException("Property is in an illegal state for construction");
         }
@@ -262,12 +275,13 @@ public class Property {
     /**
      * Sells a house/hotel from this Property
      *
+     * @return the value owed to the Player who owns this Property
      * @throws IllegalStateException when the Property is in a state that prevents houses from being sold
      */
-    public void sellHouse() {
+    public int sellHouse() {
         if (numHouses > 0 && validateProperty()) {
             numHouses--;
-            owner.updateWallet(BUILD_PRICE / 2);
+            return BUILD_PRICE / 2;
         } else {
             throw new IllegalStateException("Property is in an illegal state for construction removal");
         }
@@ -276,27 +290,49 @@ public class Property {
     /**
      * Mortgages the Property
      *
+     * @return the value owed to the Player who owns this Property
      * @throws IllegalStateException when the Property is in a state that prevents it from being mortgaged
      */
-    public void mortgage() {
+    public int mortgage() {
         if (canSell() && validateProperty() && owner != null) {
-            owner.updateWallet(MORTGAGE);
             isMortgaged = true;
+            return MORTGAGE;
         } else {
             throw new IllegalStateException("Property is in an un-mortgageable state");
         }
     }
 
     /**
+     * Transfers a mortgaged Property to a new owner. This bypasses the standard requirements that prevent a mortgaged
+     * Property from being transferred. The new Player should've already been charged for interest, if applicable
+     *
+     * @param player the new owner of the Property. This can be null
+     * @return the value that the new owner owes, if applicable
+     * @throws IllegalStateException when the owner isn't bankrupt or the Property is in an illegal state
+     */
+    public int bankruptTransfer(Player player) {
+        if (owner.getWallet() < 0 && validateProperty() && isMortgaged) {
+            if (player == null) {
+                isMortgaged = false;
+                return 0;
+            }
+            owner = player;
+            return (int) Math.round((MORTGAGE * MORTGAGE_PERCENT));
+        } else {
+            throw new IllegalStateException("Owner isn't bankrupt or the Property is in an illegal state");
+        }
+    }
+
+    /**
      * Un-mortgages the Property
      *
+     * @return the value owed by the Player who owns this Property
      * @throws IllegalStateException when the Property is in a state that prevents it form being un-mortgaged
      */
-    public void unMortgage() {
-        int cost = (int) Math.round((-MORTGAGE * 1.1));
-        if (isMortgaged && validateProperty() && owner.canAfford(cost)) {
-            owner.updateWallet(cost);
+    public int unMortgage() {
+        if (isMortgaged && validateProperty()) {
             isMortgaged = false;
+            return (int) Math.round((-MORTGAGE * (1 + MORTGAGE_PERCENT)));
         } else {
             throw new IllegalStateException("Property is in an un-un-mortgageable state");
         }

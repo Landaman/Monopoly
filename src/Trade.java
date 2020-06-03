@@ -287,11 +287,7 @@ public class Trade {
             }
 
             //Sends the sender money to the receiver
-            if (SENDER.canAfford(senderMoney)) {
-                SENDER.updateWallet(-senderMoney);
-            } else {
-                throw new IllegalStateException("The sender cannot afford their transaction!");
-            }
+            SENDER.updateWallet(-senderMoney);
             RECEIVER.updateWallet(senderMoney);
 
             for (Property property : receiverProperties) { //Sends all of the receiver properties to the sender
@@ -303,11 +299,7 @@ public class Trade {
             }
 
             //Sends the receiver money to the sender
-            if (RECEIVER.canAfford(receiverMoney)) {
-                RECEIVER.updateWallet(-receiverMoney);
-            } else {
-                throw new IllegalStateException("The receiver cannot afford their transaction!");
-            }
+            RECEIVER.updateWallet(-receiverMoney);
             SENDER.updateWallet(receiverMoney);
             isConfirmed = true;
         } else {

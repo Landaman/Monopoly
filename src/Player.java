@@ -82,12 +82,6 @@ public interface Player {
     boolean canAfford(int amount);
 
     /**
-     * This shows a message to the Player that they cannot afford their attempted transaction.
-     * This should not be called for debts or fees
-     */
-    void cannotAffordOptional();
-
-    /**
      * Gets the amount stored in the Players wallet
      *
      * @return the Players wallet
@@ -102,6 +96,13 @@ public interface Player {
     void updateWallet(int amount);
 
     /**
+     * Allows the Player to have a negative balance
+     *
+     * @param amount the amount the Player should be charged
+     */
+    void doBankruptcy(int amount);
+
+    /**
      * Gets the Players current position on the board
      *
      * @return the Players current position on the board
@@ -114,18 +115,4 @@ public interface Player {
      * @param index the index the Player should move to
      */
     void goToSpace(int index);
-
-    /**
-     * Moves the Player to a given color group
-     *
-     * @param colorGroup the color group that the Player should go to
-     */
-    void goToColorGroup(String colorGroup);
-
-    /**
-     * Declares Bankruptcy for this Player, meaning they physically cannot afford a debt owed
-     *
-     * @param debtor the Player who this Player owes, if applicable. If the debt is to the bank, this should be null
-     */
-    void declareBankruptcy(Player debtor);
 }

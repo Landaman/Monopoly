@@ -11,12 +11,13 @@ public class Game {
     //Game constants
     private final Space[] GAME_BOARD; //This stores the Spaces that come together to form the gameBoard
     private final String[] COLOR_GROUPS; //This stores the color groups that are used on the gameBoard
-    private final Player[] PLAYERS; //Stores all of the games Players
+    private final ArrayList<Player> PLAYERS; //Stores all of the games Players
     private final Dice[] DICE; //Stores the Dice for the game
     private final Deck[] DECKS; //This stores the Game's Decks. 0 is Community Chest, 1 is Chance
     private final GameUI GAME_UI; //Stores the GameUI Object that will manage the UI
     private final int JAIL_SPACE; //Stores the index of the Jail space
     private final int JAIL_BAIL; //Stores the amount the Player needs to pay to get out of jail
+    private final String[] PROMPTS; //Stores the prompts that are used during the Game
 
     //Game fields
     private int currentPlayer; //Stores the index of the current Player in PLAYERS
@@ -36,14 +37,15 @@ public class Game {
      * @param dice        a completed Array of the game's Dice. This shouldn't be null or contain any null elements
      * @param decks       a completed Array of Decks or contain any null elements
      * @param gameUI      a completed GameUI. This shouldn't be null or contain any null elements
+     * @param prompts     the prompts that are used during the Game
      * @throws IllegalArgumentException when a null, or empty parameter is passed
      */
     public Game(Space[] gameBoard, String[] colorGroups, int jailSpace, int jailBail, Player[] players,
-                Dice[] dice, Deck[] decks, GameUI gameUI) {
+                Dice[] dice, Deck[] decks, GameUI gameUI, String[] prompts) {
         if (gameBoard != null && colorGroups != null && colorGroups.length > 0 && jailSpace >= 0 &&
                 jailSpace < gameBoard.length && jailBail >= 0 &&
                 players != null && players.length > 0 && dice != null && dice.length > 0 && decks != null &&
-                gameUI != null) {
+                gameUI != null && prompts != null && prompts.length == 9) {
             for (Space space : gameBoard) { //Validates that there are no null Spaces
                 if (space == null) {
                     throw new IllegalArgumentException("A null Space was passed");
@@ -92,12 +94,13 @@ public class Game {
             COLOR_GROUPS = colorGroups;
             JAIL_SPACE = jailSpace;
             JAIL_BAIL = jailBail;
-            PLAYERS = players;
+            PLAYERS = new ArrayList<>(Arrays.asList(players));
             DICE = dice;
             DECKS = decks;
             GAME_UI = gameUI;
             updatePropertiesRent(GAME_BOARD);
             currentPlayer = 0;
+            PROMPTS = prompts;
         } else {
             throw new IllegalArgumentException("A null or empty Array was passed");
         }
@@ -272,37 +275,105 @@ public class Game {
     }
 
     /**
+     * Gets the Players Properties that can have buildings removed
+     *
+     * @param colorGroups the color groups in the Game
+     * @param spaces      the game board to read
+     * @param player      the Player to look for. This can be null, in which case an empty Array will be returned
+     * @return the Players Properties that can have buildings removed
+     */
+    private static Property[] playerPropertiesWithRemovableBuildings(String[] colorGroups, Space[] spaces, Player player) {
+        if (colorGroups != null) {
+            ArrayList<Property> result = new ArrayList<>();
+            for (String colorGroup : colorGroups) {
+                if (playerHasMonopoly(colorGroup, spaces, player)) {
+                    int max = playerPropertiesInColorGroup(colorGroup, spaces, player)[0].getNumHouses();
+                    for (Property property : playerPropertiesInColorGroup(colorGroup, spaces, player)) {
+                        if (property.getNumHouses() > max) {
+                            max = property.getNumHouses();
+                        }
+                    }
+
+                    for (Property property : playerPropertiesInColorGroup(colorGroup, spaces, player)) {
+                        if (property.getNumHouses() == max && property.canBuild()) {
+                            result.add(property);
+                        }
+                    }
+                }
+            }
+            return result.toArray(new Property[0]);
+        } else {
+            throw new IllegalArgumentException("A null color groups Array was passed");
+        }
+    }
+
+    /**
      * Gets an Array of all of the Players Properties that can be sold or mortgaged
      *
-     * @param spaces the game board to read
-     * @param player the Player to look for. This can be null, in which case an empty Array will be returned
+     * @param colorGroups the color groups in the Game
+     * @param spaces      the game board to read
+     * @param player      the Player to look for. This can be null, in which case an empty Array will be returned
      * @return an Array of all of the Players Properties that can be sold or mortgaged
      */
-    private static Property[] playerSellableProperties(Space[] spaces, Player player) {
-        ArrayList<Property> result = new ArrayList<>();
-        for (Property property : playerProperties(spaces, player)) {
-            if (property.canSell()) {
-                result.add(property);
+    private static Property[] playerSellableProperties(String[] colorGroups, Space[] spaces, Player player) {
+        if (colorGroups != null) {
+            ArrayList<Property> result = new ArrayList<>();
+            for (String colorGroup : colorGroups) {
+                if (playerHasMonopoly(colorGroup, spaces, player)) {
+                    int max = playerPropertiesInColorGroup(colorGroup, spaces, player)[0].getNumHouses();
+                    for (Property property : playerPropertiesInColorGroup(colorGroup, spaces, player)) {
+                        if (property.getNumHouses() > max) {
+                            max = property.getNumHouses();
+                        }
+                    }
+
+                    if (max == 0) {
+                        for (Property property : playerPropertiesInColorGroup(colorGroup, spaces, player)) {
+                            if (property.canSell()) {
+                                result.add(property);
+                            }
+                        }
+                    }
+                }
             }
+            return result.toArray(new Property[0]);
+        } else {
+            throw new IllegalArgumentException("A null color groups Array was passed");
         }
-        return result.toArray(new Property[0]);
     }
 
     /**
      * Gets an Array of all of the Players Properties that can be built on
      *
-     * @param spaces the game board to read
-     * @param player the Player to look for. This can be null, in which case an empty Array will be returned
+     * @param colorGroups the color groups in the Game
+     * @param spaces      the game board to read
+     * @param player      the Player to look for. This can be null, in which case an empty Array will be returned
      * @return an Array of all of the Players Properties that can be sold or mortgaged
+     * @throws IllegalArgumentException when a null color groups Array is passed
      */
-    private static Property[] playerBuildableProperties(Space[] spaces, Player player) {
-        ArrayList<Property> result = new ArrayList<>();
-        for (Property property : playerProperties(spaces, player)) {
-            if (property.canBuild() && playerHasMonopoly(property.getCOLOR_GROUP(), spaces, player)) {
-                result.add(property);
+    private static Property[] playerBuildableProperties(String[] colorGroups, Space[] spaces, Player player) {
+        if (colorGroups != null) {
+            ArrayList<Property> result = new ArrayList<>();
+            for (String colorGroup : colorGroups) {
+                if (playerHasMonopoly(colorGroup, spaces, player)) {
+                    int min = playerPropertiesInColorGroup(colorGroup, spaces, player)[0].getNumHouses();
+                    for (Property property : playerPropertiesInColorGroup(colorGroup, spaces, player)) {
+                        if (property.getNumHouses() < min) {
+                            min = property.getNumHouses();
+                        }
+                    }
+
+                    for (Property property : playerPropertiesInColorGroup(colorGroup, spaces, player)) {
+                        if (property.getNumHouses() == min && property.canBuild()) {
+                            result.add(property);
+                        }
+                    }
+                }
             }
+            return result.toArray(new Property[0]);
+        } else {
+            throw new IllegalArgumentException("A null color groups Array was passed");
         }
-        return result.toArray(new Property[0]);
     }
 
     /**
@@ -329,7 +400,7 @@ public class Game {
      * @param player the Player to look for. This can be null, in which case 0 will be returned
      * @return the number of houses owned by the Player
      */
-    private static int getNumHouses(Space[] spaces, Player player) {
+    private static int playerNumHouses(Space[] spaces, Player player) {
         int result = 0;
         if (player != null) {
             for (Property property : playerPropertiesWithBuildings(spaces, player)) {
@@ -348,7 +419,7 @@ public class Game {
      * @param player the Player to look for. This can be null, in which case 0 will be returned
      * @return the number of hotels owned by the Player
      */
-    private static int getNumHotels(Space[] spaces, Player player) {
+    private static int playerNumHotels(Space[] spaces, Player player) {
         int result = 0;
         if (player != null) {
             for (Property property : playerPropertiesWithBuildings(spaces, player)) {
@@ -379,6 +450,52 @@ public class Game {
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Finds the closest index that belongs to a given color group to startingIndex
+     *
+     * @param colorGroup    the color group to look for
+     * @param spaces        the board to read
+     * @param startingIndex the index to start at
+     * @return the closest index that belongs to a given color group
+     * @throws IllegalArgumentException when an invalid parameter is passed
+     */
+    public static int getNearestInColorGroup(String colorGroup, Space[] spaces, int startingIndex) {
+        if (colorGroup != null && spaces != null && startingIndex >= 0 && startingIndex < spaces.length) {
+            int closestIndex = -1;
+            for (int i = startingIndex; i < spaces.length; i++) { //First we'll go forwards
+                if (spaces[i] != null) {
+                    if (spaces[i].getCOLOR_GROUP().equals(colorGroup)) {
+                        closestIndex = i;
+                        break;
+                    }
+                } else {
+                    throw new IllegalArgumentException("A null Space was passed");
+                }
+            }
+
+            if (closestIndex == -1) { //If this is the case, we didn't find an index going forward, so now we'll go backwards
+                for (int i = startingIndex; i >= 0; i--) {
+                    if (spaces[i] != null) {
+                        if (spaces[i].getCOLOR_GROUP().equals(colorGroup)) {
+                            closestIndex = i;
+                            break;
+                        }
+                    } else {
+                        throw new IllegalArgumentException("A null Space was passed");
+                    }
+                }
+            }
+
+            if (closestIndex == -1) {
+                throw new IllegalArgumentException("The passed color group was not found");
+            } else {
+                return closestIndex;
+            }
+        } else {
+            throw new IllegalArgumentException("An invalid parameter was passed");
         }
     }
 
@@ -526,6 +643,92 @@ public class Game {
      */
 
     /**
+     * Executes a transaction that the Player MUST do-meaning one they could go into debt for
+     * This shouldn't be used for ones like buying properties, as those are optional
+     *
+     * @param player the Player who is having the transaction done to them
+     * @param amount the amount the transaction is for
+     * @param debtor the debtor of the transaction
+     * @return whether or not the transaction was successful
+     * @throws IllegalArgumentException when a null Player is passed
+     */
+    private boolean doMandatoryTransaction(Player player, int amount, Player debtor) {
+        if (player != null) {
+            if (player.getWallet() + amount >= 0) {
+                player.updateWallet(amount);
+                return true;
+            } else {
+                player.doBankruptcy(amount);
+                return doBankruptcy(player, amount, debtor);
+            }
+        } else {
+            throw new IllegalArgumentException("A null Player was passed");
+        }
+    }
+
+    /**
+     * Handles the process of a Player going bankrupt
+     *
+     * @param player the Player who is going bankrupt
+     * @param amount the amount the transaction is for. This is only used when the debtor isn't null
+     * @param debtor the Player the Player who is going bankrupt is in debt to. This can be null
+     * @return whether or not the Player made it out of bankruptcy
+     * @throws IllegalArgumentException when an invalid parameter is passed
+     * @throws IllegalStateException    when the method fails to execute successfully
+     */
+    private boolean doBankruptcy(Player player, int amount, Player debtor) {
+        if (player != null && player.getWallet() < 0) {
+            while (player.getWallet() < 0 && playerPropertiesWithRemovableBuildings(COLOR_GROUPS, GAME_BOARD, player).length > 0 &&
+                    playerSellableProperties(COLOR_GROUPS, GAME_BOARD, player).length > 0) { //We should keep prompting the Player to sell stuff until they can't sell anything anymore
+                if (playerPropertiesWithRemovableBuildings(COLOR_GROUPS, GAME_BOARD, player).length > 0) {
+                    promptSellBuildings(player, playerPropertiesWithRemovableBuildings(COLOR_GROUPS, GAME_BOARD, player));
+                }
+
+                if (playerSellableProperties(COLOR_GROUPS, GAME_BOARD, player).length > 0) {
+                    promptMortgage(player, playerSellableProperties(COLOR_GROUPS, GAME_BOARD, player));
+                }
+            }
+
+            if (player.getWallet() < 0) { //If this is the case the Player couldn't get themselves out of debt even after selling/mortgaging everything, so now it's time
+                if (debtor == null) { //If this is the case, the Player is in debt to the bank. This means that all of the Players Properties should be auctioned off
+                    ArrayList<Player> temp = new ArrayList<>(PLAYERS);
+                    temp.remove(player); //We should remove the Player from the auction
+                    Player[] auctionPlayers = temp.toArray(new Player[0]);
+
+                    for (Property property : playerProperties(GAME_BOARD, player)) { //Now we have to auction all of the Players properties
+                        if (property.isMortgaged()) { //We should just make sure all of the Properties are mortgaged. Basically validates the rest of the method
+                            property.bankruptTransfer(null);
+                            handleAuction(property, auctionPlayers);
+                        } else {
+                            throw new IllegalStateException("A Players Property isn't mortgaged and they are bankrupt");
+                        }
+                    }
+                } else {
+                    debtor.updateWallet(amount - player.getWallet()); //This will give the debtor the amount the Player can afford
+                    for (Property property : playerProperties(GAME_BOARD, player)) {
+                        if (property.isMortgaged()) { //As is stated above, this just validates the rest of the method
+                            if (debtor.canAfford(property.getUnMORTGAGE()) && debtor.promptBoolean
+                                    ("Would you like to un-mortgage " + property)) {
+                                property.bankruptTransfer(debtor);
+                                player.updateWallet(property.unMortgage());
+                            } else {
+                                doMandatoryTransaction(debtor, property.bankruptTransfer(debtor), null);
+                            }
+                        } else {
+                            throw new IllegalStateException("A Players Property isn't mortgaged and they are bankrupt");
+                        }
+                    }
+                }
+                PLAYERS.remove(player); //We should now remove the old Player as they cannot play anymore
+                return false;
+            }
+            return true;
+        } else {
+            throw new IllegalArgumentException("An invalid parameter was passed");
+        }
+    }
+
+    /**
      * This method covers all of the possible ways a Player can get out of jail during their turn
      *
      * @param rolls  the Array of rolls the Player did
@@ -536,31 +739,30 @@ public class Game {
     private void doJail(int[] rolls, Player player) {
         if (rolls != null && rolls.length > 0 && player != null) {
             if (player.getTurnInJail() > 0 && player.getPosition() == JAIL_SPACE) { //This ensures the Player is in jail
-                GAME_UI.showDiceRoll(rolls);
                 if (rolledDoubles(rolls)) { //If the Player rolled doubles they can get out now
                     player.move(calcRollTotal(rolls));
                 } else if (playerHasJailCard(player, DECKS) != null) { //If the Player has a get out of jail free card, we should ask if they want to use it
-                    if (player.promptBoolean("Would you like to use your get out of jail free card?")) {
+                    if (player.promptBoolean(PROMPTS[0])) {
                         Objects.requireNonNull(playerHasJailCard(player, DECKS)).setOwner(null); //This won't produce a NullPointerException as we check for it
                         player.move(calcRollTotal(rolls));
                     }
-                } else if (playerHasJailCard(player, DECKS) == null && otherPlayerHasJailCard(player, PLAYERS, DECKS)
+                } else if (playerHasJailCard(player, DECKS) == null && otherPlayerHasJailCard(player, PLAYERS.toArray(new Player[0]), DECKS)
                         .length > 0) { //If someone else has a get out of jail free card, we should ask the Player if they want to trade for it
                     Trade jailTrade;
                     do { //We'll run this Trade until the Player decides not to run a Trade anymore
-                        jailTrade = player.promptTrade("Would you like to trade another player for a get out of jail free card?",
-                                otherPlayerHasJailCard(player, PLAYERS, DECKS));
+                        jailTrade = player.promptTrade(PROMPTS[1], otherPlayerHasJailCard(player, PLAYERS.toArray(new Player[0]), DECKS));
                     } while (jailTrade != null);
                     if (playerHasJailCard(player, DECKS) != null) { //This ensures that the trade was successful and we're not just letting them out for free
                         Objects.requireNonNull(playerHasJailCard(player, DECKS)).setOwner(null); //This won't produce a NullPointerException as we check for it
                         player.move(calcRollTotal(rolls));
                     }
-                } else if (player.canAfford(JAIL_BAIL) && player.promptBoolean("Would you like to pay your bail?")) { //If the Player wants to pay their bail, we should let them go
+                } else if (player.canAfford(JAIL_BAIL) && player.promptBoolean(PROMPTS[2])) { //If the Player wants to pay their bail, we should let them go
                     player.updateWallet(-JAIL_BAIL);
                     player.move(calcRollTotal(rolls));
                 } else if (player.getTurnInJail() == 1) {
-                    player.updateWallet(-JAIL_BAIL);
-                    player.move(calcRollTotal(rolls));
+                    if (doMandatoryTransaction(player, -JAIL_BAIL, null)) {
+                        player.move(calcRollTotal(rolls));
+                    }
                 }
             } else {
                 throw new IllegalStateException("Player is not in jail or is not at the jail but is in jail");
@@ -581,7 +783,6 @@ public class Game {
     private void doMove(int[] rolls, Player player) {
         if (rolls != null && rolls.length > 0 && player != null) {
             if (player.getTurnInJail() == 0) {
-                GAME_UI.showDiceRoll(rolls);
                 player.move(calcRollTotal(rolls));
             } else {
                 throw new IllegalStateException("The Player tried to move while in jail");
@@ -599,20 +800,20 @@ public class Game {
      * @throws IllegalArgumentException when a null or invalid parameter is passed
      */
     private void handleSpace(Space space, Player player) {
-        GAME_UI.showSpace(space);
         if (space != null && player != null) {
             if (space.getPROPERTY() == null) { //If the Space doesn't have a Property, we should look for its penalty
                 if (space.getMONEY_PENALTY() != 0) { //If this is the case then we should pay the Player that amount
-                    player.updateWallet(space.getMONEY_PENALTY());
+                    doMandatoryTransaction(player, space.getMONEY_PENALTY(), null);
                 } else if (space.getMOVEMENT_PENALTY() != 0) { //If this is the case, the Player should move that amount
                     player.move(space.getMONEY_PENALTY());
                 } else if (space.getSPACE_PENALTY() != -1) { //If this is the case, the Player should go to that Space
                     player.goToSpace(space.getSPACE_PENALTY());
                 } else if (space.getCOLOR_GROUP() != null) { //If this is the case, the Player should go to that color group
-                    player.goToColorGroup(space.getCOLOR_GROUP());
+                    player.goToSpace(getNearestInColorGroup(space.getCOLOR_GROUP(), GAME_BOARD, player.getPosition()));
                 } else if (space.getPRICE_PER_HOUSE() != 0) { //If this is the case, the Player should pay that amount per house and then hotel (the two share the same state)
-                    player.updateWallet(-space.getPRICE_PER_HOUSE() * getNumHouses(GAME_BOARD, player));
-                    player.updateWallet(-space.getPRICE_PER_HOTEL() * getNumHotels(GAME_BOARD, player));
+                    if (doMandatoryTransaction(player, -space.getPRICE_PER_HOUSE() * playerNumHouses(GAME_BOARD, player), null)) {
+                        doMandatoryTransaction(player, -space.getPRICE_PER_HOTEL() * playerNumHotels(GAME_BOARD, player), null);
+                    }
                 } else if (space.getDECK_USED() != -1) { //If this is the case, the Player should draw from that deck
                     if (space.getDECK_USED() >= 0 && space.getDECK_USED() < DECKS.length) {
                         handleCard(DECKS[space.getDECK_USED()].getCard(), player);
@@ -636,30 +837,30 @@ public class Game {
      * @throws IllegalArgumentException when a null parameter is passed
      */
     private void handleCard(Card card, Player player) {
-        GAME_UI.showCard(card);
         if (card != null && player != null) {
             if (card.getMONEY() != 0) { //If this is the case, the Player should gain this amount
                 if (!card.isPER_PLAYER()) {
-                    player.updateWallet(card.getMONEY());
+                    doMandatoryTransaction(player, card.getMONEY(), null);
                 } else {
                     int total = 0;
                     for (Player otherPlayer : PLAYERS) { //We'll run through all of the Players, updating their wallet by getMONEY()
                         if (!otherPlayer.equals(player)) {
-                            otherPlayer.updateWallet(card.getMONEY());
+                            doMandatoryTransaction(player, card.getMONEY(), null);
                             total += card.getMONEY();
                         }
                     }
-                    player.updateWallet(-total); //Now we'll do the opposite of the total amount done to the other Players to this Player
+                    doMandatoryTransaction(player, -total, null);
                 }
             } else if (card.getMOVEMENT() != 0) { //If this is the case, the Player should move this amount
                 player.move(card.getMOVEMENT());
             } else if (card.getSPACE() != -1) { //If this is the case, the Player should go to this Space
                 player.goToSpace(card.getSPACE());
             } else if (card.getCOLOR_GROUP() != null) { //If this is the case, the Player should go to this color group
-                player.goToColorGroup(card.getCOLOR_GROUP());
+                player.goToSpace(getNearestInColorGroup(card.getCOLOR_GROUP(), GAME_BOARD, player.getPosition()));
             } else if (card.getPRICE_PER_HOUSE() != 0) { //If this is the case, the Player pay that amount per house and per hotel (they are linked)
-                player.updateWallet(-card.getPRICE_PER_HOUSE() * getNumHouses(GAME_BOARD, player));
-                player.updateWallet(-card.getPRICE_PER_HOTEL() * getNumHotels(GAME_BOARD, player));
+                if (doMandatoryTransaction(player, -card.getPRICE_PER_HOUSE() * playerNumHouses(GAME_BOARD, player), null)) {
+                    doMandatoryTransaction(player, -card.getPRICE_PER_HOTEL() * playerNumHotels(GAME_BOARD, player), null);
+                }
             } else if (card.IS_GET_OUT_JAIL()) { //If this is the case, the Player should get this Card
                 card.setOwner(player);
             }
@@ -675,20 +876,20 @@ public class Game {
      * @param player   the Player who landed on the Space
      */
     private void handleProperty(Property property, Player player) {
-        GAME_UI.showProperty(property);
         if (property != null && player != null) {
             if (property.getOwner() == null) { //If this is the case, the Player can buy the Property
-                if (player.canAfford(property.getPRICE()) && player.promptBoolean("Would you like to buy " + property + " for " +
+                if (player.canAfford(property.getPRICE()) && player.promptBoolean(PROMPTS[4] + property + " for " +
                         property.getPRICE() + "?")) { //If this is the case, the Player will buy the Property
-                    player.updateWallet(property.getPRICE());
+                    player.updateWallet(-property.getPRICE());
                     property.setOwner(player);
                 } else { //If they didn't choose to buy it, we need to run an auction now
-                    handleAuction(property);
+                    handleAuction(property, PLAYERS.toArray(new Player[0]));
                 }
             } else {
                 if (!property.getOwner().equals(player)) { //If this is the case, the Player owes the owner rent
-                    player.updateWallet(property.getRent());
-                    property.getOwner().updateWallet(-property.getRent());
+                    if (doMandatoryTransaction(player, -property.getRent(), property.getOwner())) {
+                        property.getOwner().updateWallet(property.getRent());
+                    }
                 }
             }
         } else {
@@ -702,18 +903,18 @@ public class Game {
      * @param property the Property being auctioned
      * @throws IllegalArgumentException when a null or owned Property is passed
      */
-    private void handleAuction(Property property) {
+    private void handleAuction(Property property, Player[] players) {
         if (property != null && property.getOwner() == null) {
-            ArrayList<Player> players = new ArrayList<>();
-            for (Player player : PLAYERS) {
-                if (player.promptBoolean("Would you like to participate in an auction for " +
+            ArrayList<Player> playersList = new ArrayList<>();
+            for (Player player : players) {
+                if (player.promptBoolean(PROMPTS[5] +
                         property + "?")) {
-                    players.add(player);
+                    playersList.add(player);
                 }
             }
 
-            if (players.size() > 0) {
-                Auction auction = new Auction(property, players);
+            if (playersList.size() > 0) {
+                Auction auction = new Auction(property, playersList);
                 do { //This will run through the Auction until the Auction Object determines it has a winner
                     auction.doRound();
                 } while (!auction.isConfirmed());
@@ -734,11 +935,10 @@ public class Game {
     private void promptSellBuildings(Player player, Property[] propertiesWithBuildings) {
         if (player != null && propertiesWithBuildings != null && propertiesWithBuildings.length > 0) {
             while (propertiesWithBuildings.length > 0) {
-                int result = player.promptArray("Would you like to sell any houses?",
-                        propertiesWithBuildings);
+                int result = player.promptArray(PROMPTS[5], propertiesWithBuildings);
                 if (result >= 0 && result < propertiesWithBuildings.length) {
                     if (propertiesWithBuildings[result].getOwner().equals(player)) {
-                        propertiesWithBuildings[result].sellHouse();
+                        player.updateWallet(propertiesWithBuildings[result].sellHouse());
                         propertiesWithBuildings = playerPropertiesWithBuildings(GAME_BOARD, player); //Updates to ensure the Player cannot remove a house when its no longer eligible
                     } else {
                         throw new IllegalArgumentException("A Property that wasn't owned by the Player was passed");
@@ -763,11 +963,11 @@ public class Game {
     private void promptMortgage(Player player, Property[] sellableProperties) {
         if (player != null && sellableProperties != null && sellableProperties.length > 0) {
             while (sellableProperties.length > 0) {
-                int result = player.promptArray("Would you like to mortgage any properties?", sellableProperties);
+                int result = player.promptArray(PROMPTS[6], sellableProperties);
                 if (result >= 0 && result < sellableProperties.length) {
                     if (sellableProperties[result].getOwner().equals(player)) {
-                        sellableProperties[result].mortgage();
-                        sellableProperties = playerSellableProperties(GAME_BOARD, player); //Updates to ensure the Player cannot double mortgage
+                        player.updateWallet(sellableProperties[result].mortgage());
+                        sellableProperties = playerSellableProperties(COLOR_GROUPS, GAME_BOARD, player); //Updates to ensure the Player cannot double mortgage
                     } else {
                         throw new IllegalArgumentException("A Property that wasn't owned by the Player was passed");
                     }
@@ -791,12 +991,12 @@ public class Game {
     private void promptUnMortgage(Player player, ArrayList<Property> unMortgageableProperties) {
         if (player != null && unMortgageableProperties != null && unMortgageableProperties.size() > 0) {
             while (unMortgageableProperties.size() > 0) {
-                unMortgageableProperties.removeIf(property -> (!player.canAfford((int) (Math.round(property.getMORTGAGE() * 1.1)))));
+                unMortgageableProperties.removeIf(property -> (!player.canAfford(property.getUnMORTGAGE())));
                 if (unMortgageableProperties.size() > 0) {
-                    int result = player.promptArrayList("Would you like to un-mortgage any properties?", unMortgageableProperties);
+                    int result = player.promptArrayList(PROMPTS[7], unMortgageableProperties);
                     if (result >= 0 && result < unMortgageableProperties.size()) {
                         if (unMortgageableProperties.get(result).getOwner().equals(player)) {
-                            unMortgageableProperties.get(result).unMortgage();
+                            player.updateWallet(unMortgageableProperties.get(result).unMortgage());
                             unMortgageableProperties = new ArrayList<>(Arrays.asList(playerMortgagedProperties(GAME_BOARD, player)));
                         } else {
                             throw new IllegalArgumentException("A Property that wasn't owned by the Player was passed");
@@ -825,11 +1025,11 @@ public class Game {
             while (buildableProperties.size() > 0) {
                 buildableProperties.removeIf(property -> (!player.canAfford(property.getBUILD_PRICE())));
                 if (buildableProperties.size() > 0) {
-                    int result = player.promptArrayList("Would you like to build on any properties?", buildableProperties);
+                    int result = player.promptArrayList(PROMPTS[8], buildableProperties);
                     if (result >= 0 && result < buildableProperties.size()) {
                         if (buildableProperties.get(result).getOwner().equals(player)) {
-                            buildableProperties.get(result).buyHouse();
-                            buildableProperties = new ArrayList<>(Arrays.asList(playerBuildableProperties(GAME_BOARD, player)));
+                            player.updateWallet(buildableProperties.get(result).buyHouse());
+                            buildableProperties = new ArrayList<>(Arrays.asList(playerBuildableProperties(COLOR_GROUPS, GAME_BOARD, player)));
                         } else {
                             throw new IllegalArgumentException("A Property that wasn't owned by a Player was passed");
                         }
@@ -849,7 +1049,7 @@ public class Game {
      * Updates who the currentPlayer is. Is cyclical, meaning once currentPlayer would go out of bounds for PLAYERS it goes to 0
      */
     public void nextPlayer() {
-        if (currentPlayer + 1 < PLAYERS.length) {
+        if (currentPlayer + 1 < PLAYERS.size()) {
             currentPlayer++;
         } else {
             currentPlayer = 0;
@@ -858,49 +1058,54 @@ public class Game {
 
     /**
      * Executes all aspects of a turn of the Game
+     *
+     * @throws IllegalStateException when currentPlayer is out of bounds or the currentPlayer is bankrupt
      */
     public void doTurn() {
         updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
-        Player player = PLAYERS[currentPlayer];
-        GAME_UI.showPlayerTurn(player);
-        boolean playerStartsInJail = player.getTurnInJail() > 0;
-        int startingPosition = player.getPosition();
-        int[] rolls = getRoll(DICE);
-        if (playerStartsInJail) {
-            doJail(rolls, player);
+        if (currentPlayer >= 0 && currentPlayer < PLAYERS.size() && PLAYERS.get(currentPlayer).getWallet() >= 0) {
+            Player player = PLAYERS.get(currentPlayer);
+            boolean playerStartsInJail = player.getTurnInJail() > 0;
+            int startingPosition = player.getPosition();
+            int[] rolls = getRoll(DICE);
+            if (playerStartsInJail) {
+                doJail(rolls, player);
+            } else {
+                doMove(rolls, player);
+            }
+
+            while (startingPosition != player.getPosition()) { //Theoretically the Player could go around the board forever depending on the moves, so until they don't move after the Space is processed we'll keep processing the Spaces
+                startingPosition = player.getPosition();
+                handleSpace(GAME_BOARD[player.getPosition()], player);
+                updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
+            }
+
+            if (playerPropertiesWithRemovableBuildings(COLOR_GROUPS, GAME_BOARD, player).length > 0) { //If the Player can sell any buildings, we should ask
+                promptSellBuildings(player, playerPropertiesWithRemovableBuildings(COLOR_GROUPS, GAME_BOARD, player));
+            }
+
+            if (playerSellableProperties(COLOR_GROUPS, GAME_BOARD, player).length > 0) { //If the Player can mortgage any Properties, we should ask
+                promptMortgage(player, playerSellableProperties(COLOR_GROUPS, GAME_BOARD, player));
+            }
+
+            if (playerMortgagedProperties(GAME_BOARD, player).length > 0) { //If the Player can un-mortgage any Properties, we should ask
+                promptUnMortgage(player, new ArrayList<>(Arrays.asList(playerMortgagedProperties(GAME_BOARD, player))));
+            }
+
+            if (playerBuildableProperties(COLOR_GROUPS, GAME_BOARD, player).length > 0) { //If the Player can buy any buildings, we should ask
+                promptBuyBuildings(player, new ArrayList<>(Arrays.asList(playerBuildableProperties(COLOR_GROUPS, GAME_BOARD, player))));
+            }
+
+            Trade trade;
+            do {
+                trade = player.promptTrade(PROMPTS[8], PLAYERS.toArray(new Player[0]));
+            } while (trade != null);
+
+            if (playerStartsInJail || !rolledDoubles(rolls)) { //If the player started in jail or didn't roll doubles the next Player will be the next in line
+                nextPlayer();
+            }
         } else {
-            doMove(rolls, player);
-        }
-
-        while (startingPosition != player.getPosition()) { //Theoretically the Player could go around the board forever depending on the moves, so until they don't move after the Space is processed we'll keep processing the Spaces
-            startingPosition = player.getPosition();
-            handleSpace(GAME_BOARD[player.getPosition()], player);
-            updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
-        }
-
-        if (playerPropertiesWithBuildings(GAME_BOARD, player).length > 0) { //If the Player can sell any buildings, we should ask
-            promptSellBuildings(player, playerPropertiesWithBuildings(GAME_BOARD, player));
-        }
-
-        if (playerSellableProperties(GAME_BOARD, player).length > 0) { //If the Player can mortgage any Properties, we should ask
-            promptMortgage(player, playerSellableProperties(GAME_BOARD, player));
-        }
-
-        if (playerMortgagedProperties(GAME_BOARD, player).length > 0) { //If the Player can un-mortgage any Properties, we should ask
-            promptUnMortgage(player, new ArrayList<>(Arrays.asList(playerMortgagedProperties(GAME_BOARD, player))));
-        }
-
-        if (playerBuildableProperties(GAME_BOARD, player).length > 0) { //If the Player can buy any buildings, we should ask
-            promptBuyBuildings(player, new ArrayList<>(Arrays.asList(playerBuildableProperties(GAME_BOARD, player))));
-        }
-
-        Trade trade;
-        do {
-            trade = player.promptTrade("Would you like to trade?", PLAYERS);
-        } while (trade != null);
-
-        if (playerStartsInJail || !rolledDoubles(rolls)) { //If the player started in jail or didn't roll doubles the next Player will be the next in line
-            nextPlayer();
+            throw new IllegalStateException("Game is in an illegal state");
         }
     }
 }
