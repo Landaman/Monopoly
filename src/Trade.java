@@ -23,7 +23,7 @@ public class Trade {
 
     public Trade(Player sender, Player receiver) {
         if (sender != null && receiver != null) {
-            if (receiver.promptBoolean("Would you like to trade with " + sender.getName() + "?")) {
+            if (receiver.promptBoolean("Would you like to trade with " + sender + "?")) {
                 SENDER = sender;
                 RECEIVER = receiver;
                 isConfirmed = false;
@@ -79,6 +79,23 @@ public class Trade {
         } else {
             throw new IllegalStateException("Tried to alter a Trade after it was confirmed");
         }
+    }
+
+    /**
+     * Gets the list of Properties being offered by the sender
+     * @return the list of Properties being offered by the sender
+     */
+    public ArrayList<Property> getSenderProperties() {
+        return senderProperties;
+
+    }
+
+    /**
+     * Gets the list of Properties being offered by the receiver
+     * @return the list of Properties being offered by the receiver
+     */
+    public ArrayList<Property> getReceiverProperties() {
+        return receiverProperties;
     }
 
     /**
@@ -196,6 +213,22 @@ public class Trade {
     }
 
     /**
+     * Gets the list of Cards being offered by the sender
+     * @return the list of Cards being offered by the sender
+     */
+    public ArrayList<Card> getSenderCards() {
+        return senderCards;
+    }
+
+    /**
+     * Gets the list of Cards being offered by the receiver
+     * @return the list of Cards being offered by the receiver
+     */
+    public ArrayList<Card> getReceiverCards() {
+        return receiverCards;
+    }
+
+    /**
      * Adds money to the amount the sender is offering
      *
      * @param amount the amount being added
@@ -269,6 +302,22 @@ public class Trade {
         } else {
             throw new IllegalStateException("Tried to alter a Trade after it was confirmed");
         }
+    }
+
+    /**
+     * Gets the amount of money the sender is offering
+     * @return the amount of money the sender is offering
+     */
+    public int getSenderMoney() {
+        return senderMoney;
+    }
+
+    /**
+     * Gets the amount of money the receiver is offering
+     * @return the amount of money the receiver is offering
+     */
+    public int getReceiverMoney() {
+        return receiverMoney;
     }
 
     /**

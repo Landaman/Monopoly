@@ -130,24 +130,12 @@ public class HumanPlayer implements Player {
     }
 
     /**
-     * Prompts the Player if they would like to start a trade with any of the Players in players
-     *
-     * @param description the description that should be shown to the Player
-     * @param players     the Players that this Player should be asked if they want to trade
-     * @return the completed Trade that the Players have or haven't done
-     */
-    @Override
-    public Trade promptTrade(String description, Player[] players) {
-
-    }
-
-    /**
      * Gets the Players name
      *
      * @return the Players name
      */
     @Override
-    public String getName() {
+    public String toString() {
         return NAME;
     }
 

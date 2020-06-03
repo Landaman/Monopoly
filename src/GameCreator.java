@@ -23,8 +23,8 @@ public class GameCreator {
             int numDice, int diceSides,
             //Deck parameters
             String[][] cardTypes, String[][] cardDescriptions, int[][] cardMoneyLosses, boolean[][] cardPerPlayer,
-            int[][] cardMovementLosses, int[][] cardSpaceLosses, String[][] cardColorGroup, int[][] cardPerHouses,
-            int[][] cardPerHotels, boolean[][] cardGetOutJail, Player[][] cardOwners) {
+            int[][] cardMovementLosses, int[][] cardSpaceLosses, String[][] cardColorGroup, double[][] cardRentMultiplier,
+            int[][] cardPerHouses, int[][] cardPerHotels, boolean[][] cardGetOutJail, Player[][] cardOwners) {
         Space[] spaces = setupSpaces(
                 //Space parameters
                 spaceNames, spaceMoneyLosses, spaceMovementLosses, spaceSpaceLosses, spaceColorGroups, spacePerHouses,
@@ -37,7 +37,8 @@ public class GameCreator {
                 playerJailCards, jailPosition, playerSalaries, numTurnsInJail, prompts);
         Dice[] dice = setupDice(numDice, diceSides);
         Deck[] deck = setupDecks(cardTypes, cardDescriptions, cardMoneyLosses, cardPerPlayer, cardMovementLosses,
-                cardSpaceLosses, cardColorGroup, cardPerHouses, cardPerHotels, cardGetOutJail, cardOwners, spaces.length);
+                cardSpaceLosses, cardColorGroup, cardRentMultiplier,cardPerHouses, cardPerHotels, cardGetOutJail, cardOwners,
+                spaces.length);
 
         return new Game();
     }
@@ -288,6 +289,7 @@ public class GameCreator {
      * @param cardMovement     the amount of Spaces the Player should move for landing using these Cards. This shouldn't be null
      * @param cardSpace        the index of the Space the Player should go to for getting these Cards. This shouldn't be null
      * @param cardColorGroup   the index of the Space the Player should go to for getting these Cards. This shouldn't be null
+     * @param cardRentMultiplier the rent multiplier that the Player should pay on the next Space they land on
      * @param cardPerHouse     the amount of money the Player should pay per house owned. This shouldn't be null
      * @param cardPerHotel     the amount of money the Player should pay per hotel owned. This shouldn't be null
      * @param cardGetOutJail   whether or not these Cards are get out of jail cards. This shouldn't be null
@@ -298,20 +300,21 @@ public class GameCreator {
      */
     private static Deck[] setupDecks(String[][] cardTypes, String[][] cardDescriptions, int[][] cardMoney,
                                      boolean[][] cardPerPlayer, int[][] cardMovement, int[][] cardSpace,
-                                     String[][] cardColorGroup, int[][] cardPerHouse, int[][] cardPerHotel,
+                                     String[][] cardColorGroup, double[][] cardRentMultiplier, int[][] cardPerHouse, int[][] cardPerHotel,
                                      boolean[][] cardGetOutJail, Player[][] cardOwner, int boardSize) {
         if (cardTypes != null && cardDescriptions != null && cardMoney != null && cardPerPlayer != null &&
-                cardMovement != null && cardSpace != null && cardColorGroup != null && cardPerHouse != null &&
-                cardPerHotel != null && cardGetOutJail != null && cardOwner != null &&
+                cardMovement != null && cardSpace != null && cardColorGroup != null && cardRentMultiplier != null &&
+                cardPerHouse != null && cardPerHotel != null && cardGetOutJail != null && cardOwner != null &&
                 cardTypes.length == cardDescriptions.length && cardDescriptions.length == cardMoney.length &&
                 cardMoney.length == cardPerPlayer.length && cardPerPlayer.length == cardMovement.length &&
                 cardMovement.length == cardSpace.length && cardSpace.length == cardColorGroup.length &&
-                cardColorGroup.length == cardPerHouse.length && cardPerHouse.length == cardPerHotel.length &&
-                cardPerHotel.length == cardGetOutJail.length && cardGetOutJail.length == cardOwner.length) {
+                cardColorGroup.length == cardRentMultiplier.length && cardRentMultiplier.length == cardPerHouse.length &&
+                cardPerHouse.length == cardPerHotel.length && cardPerHotel.length == cardGetOutJail.length &&
+                cardGetOutJail.length == cardOwner.length) {
             Deck[] decks = new Deck[cardTypes.length];
             for (int i = 0; i < decks.length; i++) {
                 decks[i] = setupDeck(cardTypes[i], cardDescriptions[i], cardMoney[i], cardPerPlayer[i], cardMovement[i],
-                        cardSpace[i], cardColorGroup[i], cardPerHouse[i], cardPerHotel[i], cardGetOutJail[i],
+                        cardSpace[i], cardColorGroup[i], cardRentMultiplier[i], cardPerHouse[i], cardPerHotel[i], cardGetOutJail[i],
                         cardOwner[i], boardSize);
             }
             return decks;
@@ -333,6 +336,7 @@ public class GameCreator {
      * @param cardMovement     the amount of Spaces the Player should move for landing using these Cards. This shouldn't be null
      * @param cardSpace        the index of the Space the Player should go to for getting these Cards. This shouldn't be null
      * @param cardColorGroup   the index of the Space the Player should go to for getting these Cards. This shouldn't be null
+     * @param cardRentMultiplier the multiplier that the Player should pay for the next Space they land on
      * @param cardPerHouse     the amount of money the Player should pay per house owned. This shouldn't be null
      * @param cardPerHotel     the amount of money the Player should pay per hotel owned. This shouldn't be null
      * @param cardGetOutJail   whether or not these Cards are get out of jail cards. This shouldn't be null
@@ -343,8 +347,8 @@ public class GameCreator {
      */
     private static Deck setupDeck(String[] cardTypes, String[] cardDescriptions, int[] cardMoney,
                                   boolean[] cardPerPlayer, int[] cardMovement, int[] cardSpace, String[] cardColorGroup,
-                                  int[] cardPerHouse, int[] cardPerHotel, boolean[] cardGetOutJail, Player[] cardOwner,
-                                  int boardSize) {
+                                  double[] cardRentMultiplier, int[] cardPerHouse, int[] cardPerHotel,
+                                  boolean[] cardGetOutJail, Player[] cardOwner, int boardSize) {
         if (cardTypes != null && cardDescriptions != null && cardMoney != null && cardPerPlayer != null &&
                 cardMovement != null && cardSpace != null && cardColorGroup != null && cardPerHouse != null &&
                 cardPerHotel != null && cardGetOutJail != null && cardOwner != null &&
@@ -356,7 +360,7 @@ public class GameCreator {
             Card[] cards = new Card[cardTypes.length];
             for (int i = 0; i < cards.length; i++) {
                 cards[i] = new Card(cardTypes[i], cardDescriptions[i], cardMoney[i], cardPerPlayer[i], cardMovement[i],
-                        cardSpace[i], cardColorGroup[i], cardPerHouse[i], cardPerHotel[i], cardGetOutJail[i],
+                        cardSpace[i], cardColorGroup[i], cardRentMultiplier[i], cardPerHouse[i], cardPerHotel[i], cardGetOutJail[i],
                         cardOwner[i], boardSize);
             }
             return new Deck(cards);

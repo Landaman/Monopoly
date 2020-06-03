@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -45,7 +46,7 @@ public class Game {
         if (gameBoard != null && colorGroups != null && colorGroups.length > 0 && jailSpace >= 0 &&
                 jailSpace < gameBoard.length && jailBail >= 0 &&
                 players != null && players.length > 0 && dice != null && dice.length > 0 && decks != null &&
-                gameUI != null && prompts != null && prompts.length == 9) {
+                gameUI != null && prompts != null && prompts.length == 16) {
             for (Space space : gameBoard) { //Validates that there are no null Spaces
                 if (space == null) {
                     throw new IllegalArgumentException("A null Space was passed");
@@ -643,6 +644,198 @@ public class Game {
      */
 
     /**
+     * Prompts the Player if they would like to start a trade with any of the Players in players
+     *
+     * @param description the description that should be shown to the Player
+     * @param players     the Players that this Player should be asked if they want to trade
+     * @return the completed Trade that the Players have or haven't done
+     * @throws IllegalArgumentException when a null or invalid parameter is passed
+     */
+    public Trade promptTrade(String description, Player sender, Player[] players) {
+        if (description != null && players != null && players.length > 0) {
+            int index = sender.promptArray(description, players);
+            if (index >= 0 && index < players.length) {
+                Player receiver = players[index];
+                if (sender.promptBoolean(description + " with " + sender + "?")) {
+                    Trade trade = new Trade(sender, receiver);
+                    Player currentOfferer = sender;
+                    while (true) {
+                        ArrayList<Property> senderOfferableProperties = new ArrayList<>(Arrays.asList
+                                (playerSellableProperties(COLOR_GROUPS, GAME_BOARD, sender)));
+                        while (senderOfferableProperties.size() > 0) {
+                            senderOfferableProperties = new ArrayList<>(Arrays.asList
+                                    (playerSellableProperties(COLOR_GROUPS, GAME_BOARD, sender)));
+                            senderOfferableProperties.removeIf(property -> (trade.getSenderProperties().contains(property)));
+                            if (senderOfferableProperties.size() > 0) {
+                                int propertyIndex = currentOfferer.promptArrayList(PROMPTS[9], senderOfferableProperties);
+                                if (propertyIndex != -1) {
+                                    trade.addSenderProperty(senderOfferableProperties.get(propertyIndex));
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+
+                        ArrayList<Property> senderOfferedProperties = new ArrayList<>(trade.getSenderProperties());
+                        while (senderOfferedProperties.size() > 0) {
+                            senderOfferedProperties = new ArrayList<>(trade.getSenderProperties());
+                            if (senderOfferedProperties.size() > 0) {
+                                int propertyIndex = currentOfferer.promptArrayList(PROMPTS[10], senderOfferedProperties);
+                                if (propertyIndex != -1) {
+                                    trade.removeSenderProperty(senderOfferedProperties.get(propertyIndex));
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+
+                        ArrayList<Card> senderOfferableCards = new ArrayList<>(Arrays.asList(getOwnedCards(sender, DECKS)));
+                        while (senderOfferableCards.size() > 0) {
+                            senderOfferableCards = new ArrayList<>(Arrays.asList(getOwnedCards(sender, DECKS)));
+                            senderOfferableCards.removeIf(card -> trade.getSenderCards().contains(card));
+                            if (senderOfferableCards.size() > 0) {
+                                int cardIndex = currentOfferer.promptArrayList(PROMPTS[11], senderOfferableCards);
+                                if (cardIndex != -1) {
+                                    trade.addSenderCard(senderOfferableCards.get(cardIndex));
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+
+                        ArrayList<Card> senderOfferedCards = new ArrayList<>(trade.getSenderCards());
+                        while (senderOfferedCards.size() > 0) {
+                            senderOfferedCards = new ArrayList<>(trade.getSenderCards());
+                            if (senderOfferableCards.size() > 0) {
+                                int cardIndex = currentOfferer.promptArrayList(PROMPTS[12], senderOfferableCards);
+                                if (cardIndex != -1) {
+                                    trade.removeSenderCard(senderOfferedCards.get(cardIndex));
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+
+                        int senderOfferableCash = sender.getWallet() - trade.getSenderMoney();
+                        if (senderOfferableCash > 0) {
+                            int cash = currentOfferer.promptInt(PROMPTS[13], 0, senderOfferableCash, -1);
+                            if (cash >= 0 && cash <= senderOfferableCash) {
+                                trade.addSenderMoney(senderOfferableCash);
+                            }
+                        }
+
+                        int senderOfferedCash = trade.getSenderMoney();
+                        if (senderOfferedCash > 0) {
+                            int cash = currentOfferer.promptInt(PROMPTS[14], 0, senderOfferedCash, -1);
+                            if (cash >= 0 && cash <= senderOfferableCash) {
+                                trade.removeSenderMoney(cash);
+                            }
+                        }
+
+                        ArrayList<Property> receiverOfferableProperties = new ArrayList<>(Arrays.asList
+                                (playerSellableProperties(COLOR_GROUPS, GAME_BOARD, receiver)));
+                        while (receiverOfferableProperties.size() > 0) {
+                            receiverOfferableProperties = new ArrayList<>(Arrays.asList
+                                    (playerSellableProperties(COLOR_GROUPS, GAME_BOARD, receiver)));
+                            receiverOfferableProperties.removeIf(property -> (trade.getReceiverProperties().contains(property)));
+                            if (receiverOfferableProperties.size() > 0) {
+                                int propertyIndex = currentOfferer.promptArrayList(PROMPTS[9], receiverOfferableProperties);
+                                if (propertyIndex != -1) {
+                                    trade.addReceiverProperty(receiverOfferableProperties.get(propertyIndex));
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+
+                        ArrayList<Property> receiverOfferedProperties = new ArrayList<>(trade.getReceiverProperties());
+                        while (receiverOfferedProperties.size() > 0) {
+                            receiverOfferedProperties = new ArrayList<>(trade.getReceiverProperties());
+                            if (receiverOfferedProperties.size() > 0) {
+                                int propertyIndex = currentOfferer.promptArrayList(PROMPTS[10], receiverOfferedProperties);
+                                if (propertyIndex != -1) {
+                                    trade.removeReceiverProperty(receiverOfferedProperties.get(propertyIndex));
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+
+                        ArrayList<Card> receiverOfferableCards = new ArrayList<>(Arrays.asList(getOwnedCards(receiver, DECKS)));
+                        while (receiverOfferableCards.size() > 0) {
+                            receiverOfferableCards = new ArrayList<>(Arrays.asList(getOwnedCards(receiver, DECKS)));
+                            receiverOfferableCards.removeIf(card -> trade.getReceiverCards().contains(card));
+                            if (receiverOfferableCards.size() > 0) {
+                                int cardIndex = currentOfferer.promptArrayList(PROMPTS[11], receiverOfferableCards);
+                                if (cardIndex != -1) {
+                                    trade.addReceiverCard(receiverOfferableCards.get(cardIndex));
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+
+                        ArrayList<Card> receiverOfferedCards = new ArrayList<>(trade.getReceiverCards());
+                        while (receiverOfferedCards.size() > 0) {
+                            receiverOfferedCards = new ArrayList<>(trade.getReceiverCards());
+                            if (receiverOfferableCards.size() > 0) {
+                                int cardIndex = currentOfferer.promptArrayList(PROMPTS[12], receiverOfferableCards);
+                                if (cardIndex != -1) {
+                                    trade.removeReceiverCard(receiverOfferedCards.get(cardIndex));
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+
+                        int receiverOfferableCash = receiver.getWallet() - trade.getReceiverMoney();
+                        if (receiverOfferableCash > 0) {
+                            int cash = currentOfferer.promptInt(PROMPTS[13], 0, receiverOfferableCash, -1);
+                            if (cash >= 0 && cash <= receiverOfferableCash) {
+                                trade.addReceiverMoney(receiverOfferableCash);
+                            }
+                        }
+
+                        int receiverOfferedCash = trade.getReceiverMoney();
+                        if (receiverOfferedCash > 0) {
+                            int cash = currentOfferer.promptInt(PROMPTS[14], 0, receiverOfferedCash, -1);
+                            if (cash >= 0 && cash <= receiverOfferableCash) {
+                                trade.removeReceiverMoney(cash);
+                            }
+                        }
+
+                        if (currentOfferer.equals(sender)) {
+                            int result = receiver.promptTrade(PROMPTS[15], trade);
+                            if (result == 0) {
+                                currentOfferer = receiver;
+                            } else if (result == 1) {
+                                return trade;
+                            } else if (result == -1) {
+                                return null;
+                            }
+                        } else {
+                            int result = sender.promptTrade(PROMPTS[15], trade);
+                            if (result == 0) {
+                                currentOfferer = sender;
+                            } else if (result == 1) {
+                                return trade;
+                            } else if (result == -1) {
+                                return null;
+                            }
+                        }
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } else {
+            throw new IllegalArgumentException("A null or empty parameter was passed");
+        }
+    }
+
+    /**
      * Executes a transaction that the Player MUST do-meaning one they could go into debt for
      * This shouldn't be used for ones like buying properties, as those are optional
      *
@@ -750,7 +943,7 @@ public class Game {
                         .length > 0) { //If someone else has a get out of jail free card, we should ask the Player if they want to trade for it
                     Trade jailTrade;
                     do { //We'll run this Trade until the Player decides not to run a Trade anymore
-                        jailTrade = player.promptTrade(PROMPTS[1], otherPlayerHasJailCard(player, PLAYERS.toArray(new Player[0]), DECKS));
+                        jailTrade = promptTrade(PROMPTS[1], player, otherPlayerHasJailCard(player, PLAYERS.toArray(new Player[0]), DECKS));
                     } while (jailTrade != null);
                     if (playerHasJailCard(player, DECKS) != null) { //This ensures that the trade was successful and we're not just letting them out for free
                         Objects.requireNonNull(playerHasJailCard(player, DECKS)).setOwner(null); //This won't produce a NullPointerException as we check for it
@@ -853,10 +1046,22 @@ public class Game {
                 }
             } else if (card.getMOVEMENT() != 0) { //If this is the case, the Player should move this amount
                 player.move(card.getMOVEMENT());
+                if (card.getRENT_MULTIPLIER() != 0) {
+                    doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
+                            (int)Math.round(1-card.getRENT_MULTIPLIER()), null);
+                }
             } else if (card.getSPACE() != -1) { //If this is the case, the Player should go to this Space
                 player.goToSpace(card.getSPACE());
+                if (card.getRENT_MULTIPLIER() != 0) {
+                    doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
+                            (int)Math.round(1-card.getRENT_MULTIPLIER()), null);
+                }
             } else if (card.getCOLOR_GROUP() != null) { //If this is the case, the Player should go to this color group
                 player.goToSpace(getNearestInColorGroup(card.getCOLOR_GROUP(), GAME_BOARD, player.getPosition()));
+                if (card.getRENT_MULTIPLIER() != 0) {
+                    doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
+                            (int)Math.round(1-card.getRENT_MULTIPLIER()), null);
+                }
             } else if (card.getPRICE_PER_HOUSE() != 0) { //If this is the case, the Player pay that amount per house and per hotel (they are linked)
                 if (doMandatoryTransaction(player, -card.getPRICE_PER_HOUSE() * playerNumHouses(GAME_BOARD, player), null)) {
                     doMandatoryTransaction(player, -card.getPRICE_PER_HOTEL() * playerNumHotels(GAME_BOARD, player), null);
@@ -1067,6 +1272,7 @@ public class Game {
             Player player = PLAYERS.get(currentPlayer);
             boolean playerStartsInJail = player.getTurnInJail() > 0;
             int startingPosition = player.getPosition();
+            int startingPlayerNumber = PLAYERS.size();
             int[] rolls = getRoll(DICE);
             if (playerStartsInJail) {
                 doJail(rolls, player);
@@ -1074,10 +1280,14 @@ public class Game {
                 doMove(rolls, player);
             }
 
-            while (startingPosition != player.getPosition()) { //Theoretically the Player could go around the board forever depending on the moves, so until they don't move after the Space is processed we'll keep processing the Spaces
+            while (startingPlayerNumber == PLAYERS.size() && startingPosition != player.getPosition()) { //Theoretically the Player could go around the board forever depending on the moves, so until they don't move after the Space is processed we'll keep processing the Spaces
                 startingPosition = player.getPosition();
                 handleSpace(GAME_BOARD[player.getPosition()], player);
                 updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
+            }
+
+            if (startingPlayerNumber != PLAYERS.size()) { //If this is the case the Player has gone bankrupt, meaning they shouldn't be allowed to do anything else
+                return;
             }
 
             if (playerPropertiesWithRemovableBuildings(COLOR_GROUPS, GAME_BOARD, player).length > 0) { //If the Player can sell any buildings, we should ask
@@ -1098,7 +1308,7 @@ public class Game {
 
             Trade trade;
             do {
-                trade = player.promptTrade(PROMPTS[8], PLAYERS.toArray(new Player[0]));
+                trade = promptTrade(PROMPTS[8], player, PLAYERS.toArray(new Player[0]));
             } while (trade != null);
 
             if (playerStartsInJail || !rolledDoubles(rolls)) { //If the player started in jail or didn't roll doubles the next Player will be the next in line

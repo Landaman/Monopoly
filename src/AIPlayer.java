@@ -37,7 +37,7 @@ public class AIPlayer implements Player {
                     int jailPosition, int salary, int numTurnsInJail, String[] prompts) {
         if (name != null && startingWallet >= 0 && startingPosition >= 0 && startingPosition < boardSize &&
                 turnsJail >= 0 && jailPosition >= 0 && jailPosition < boardSize && salary >= 0 && numTurnsInJail >= 0 &&
-                !(turnsJail > 0 && startingPosition != jailPosition) && prompts != null && prompts.length == 9) {
+                !(turnsJail > 0 && startingPosition != jailPosition) && prompts != null && prompts.length == 16) {
             NAME = name;
             wallet = startingWallet;
             position = startingPosition;
@@ -132,14 +132,14 @@ public class AIPlayer implements Player {
     }
 
     /**
-     * Prompts the Player if they would like to start a trade with any of the Players in players
+     * Prompts the Player to confirm or decline a Trade
      *
      * @param description the description that should be shown to the Player
-     * @param players     the Players that this Player should be asked if they want to trade
-     * @return the completed Trade that the Players have or haven't done
+     * @param trade       the Trade
+     * @return 0 if the Player rejects the trade but wants to continue, 1 if they accept, and -1 if they want to stop
      */
     @Override
-    public Trade promptTrade(String description, Player[] players) {
+    public int promptTrade(String description, Trade trade) {
 
     }
 
@@ -149,7 +149,7 @@ public class AIPlayer implements Player {
      * @return the Players name
      */
     @Override
-    public String getName() {
+    public String toString() {
         return NAME;
     }
 

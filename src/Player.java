@@ -58,20 +58,19 @@ public interface Player {
     int promptArrayList(String description, ArrayList objects);
 
     /**
-     * Prompts the Player if they would like to start a trade with any of the Players in players
-     *
+     * Prompts the Player to confirm or decline a Trade
      * @param description the description that should be shown to the Player
-     * @param players     the Players that this Player should be asked if they want to trade
-     * @return the completed Trade that the Players have or haven't done
+     * @param trade the Trade
+     * @return 0 if the Player rejects the trade but wants to continue, 1 if they accept, and -1 if they want to stop
      */
-    Trade promptTrade(String description, Player[] players);
+    int promptTrade(String description, Trade trade);
 
     /**
      * Gets the Players name
      *
      * @return the Players name
      */
-    String getName();
+    String toString();
 
     /**
      * Gets whether the Player can afford their purchase
