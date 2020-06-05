@@ -89,7 +89,7 @@ public class HumanPlayer implements Player {
      */
     @Override
     public <T> boolean promptBoolean(String description, T object) {
-        return false;
+
     }
 
     /**
@@ -104,7 +104,7 @@ public class HumanPlayer implements Player {
      */
     @Override
     public <T> int promptInt(String description, int min, int max, int none, T object) {
-        return 0;
+
     }
 
     /**

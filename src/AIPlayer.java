@@ -293,13 +293,6 @@ public class AIPlayer implements Player {
                 thisPlayer.equals(trade.getRECEIVER()))) {
             int senderValue = 0;
             int receiverValue = 0;
-            for (Property property : trade.getSenderProperties()) { //This switches the senders Properties owners in the temp board
-                spaces[recognizeSpace(spaces, property)].getPROPERTY().setOwner(trade.getRECEIVER());
-            }
-
-            for (Property property : trade.getReceiverProperties()) { //This switches the receivers Properties owners in the temp board
-                spaces[recognizeSpace(spaces, property)].getPROPERTY().setOwner(trade.getSENDER());
-            }
 
             for (Property property : trade.getSenderProperties()) { //This adds the AI's calculated worth of each Property to the values
                 senderValue += getPropertyValue(spaces, thisPlayer, property);
