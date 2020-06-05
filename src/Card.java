@@ -28,21 +28,21 @@ public class Card {
     /**
      * Constructor for Card. Validates the constants as outlined here
      *
-     * @param type        the type of the Card (I.E. Community Chest or Chance). This shouldn't be null
-     * @param description the description of the Card. This shouldn't be null
-     * @param money       the amount of money the Player should gain from this Card. Should be 0 for no change
-     * @param perPlayer   whether the value of money should be enacted onto every other Player, and then the opposite of
-     *                    the total done to this Player. Should be false if not
-     * @param movement    the amount of Spaces the Player should move. Should be 0 for no movement
-     * @param space       the index of the Space the Player should go to. Should be -1 for no movement
-     * @param colorGroup  the color group that the Player should go to. Should be null if they shouldn't move
+     * @param type           the type of the Card (I.E. Community Chest or Chance). This shouldn't be null
+     * @param description    the description of the Card. This shouldn't be null
+     * @param money          the amount of money the Player should gain from this Card. Should be 0 for no change
+     * @param perPlayer      whether the value of money should be enacted onto every other Player, and then the opposite of
+     *                       the total done to this Player. Should be false if not
+     * @param movement       the amount of Spaces the Player should move. Should be 0 for no movement
+     * @param space          the index of the Space the Player should go to. Should be -1 for no movement
+     * @param colorGroup     the color group that the Player should go to. Should be null if they shouldn't move
      * @param rentMultiplier the multiplier that the Player should pay on the rent of the Space they land on.
      *                       This should be tied to movement, space, or color group
-     * @param perHouse    the amount that the Player should pay per house owned. Should be 0 for no charge
-     * @param perHotel    the amount that the Player should pay per hotel owned. Should be 0 for no charge
-     * @param getOutJail  whether or not this is a get out of jail free Card. Should be false if not
-     * @param own         the Player who holds this Card
-     * @param boardSize   the board's size. Used for validation, is not stored
+     * @param perHouse       the amount that the Player should pay per house owned. Should be 0 for no charge
+     * @param perHotel       the amount that the Player should pay per hotel owned. Should be 0 for no charge
+     * @param getOutJail     whether or not this is a get out of jail free Card. Should be false if not
+     * @param own            the Player who holds this Card
+     * @param boardSize      the board's size. Used for validation, is not stored
      * @throws IllegalArgumentException when an invalid parameter is passed
      */
     public Card(String type, String description, int money, boolean perPlayer, int movement, int space, String colorGroup,
@@ -138,6 +138,7 @@ public class Card {
 
     /**
      * Gets the rent multiplier that the Player should have to pay on the next Space they land on
+     *
      * @return the rent multiplier that the Player should have to pay
      */
     public double getRENT_MULTIPLIER() {

@@ -42,7 +42,8 @@ public class Space {
                 !((moneyLoss != 0 || movementLoss != 0 || spaceLoss != -1 || colorGroup != null || deckUsed != -1 || property != null) && perHouse != 0) &&
                 !((moneyLoss != 0 || movementLoss != 0 || spaceLoss != -1 || perHouse != 0 || deckUsed != -1 || property != null) && colorGroup != null) &&
                 !((moneyLoss != 0 || movementLoss != 0 || colorGroup != null || perHouse != 0 || deckUsed != -1 || property != null) && spaceLoss != -1) &&
-                !((moneyLoss != 0 || spaceLoss != -1 || colorGroup != null || perHouse != 0 || deckUsed != -1 || property != null) && movementLoss != 0)) {
+                !((moneyLoss != 0 || spaceLoss != -1 || colorGroup != null || perHouse != 0 || deckUsed != -1 || property != null) && movementLoss != 0) &&
+                !(property != null && !name.equals(property.toString()))) {
             NAME = name;
             MONEY_PENALTY = moneyLoss;
             MOVEMENT_PENALTY = movementLoss;
@@ -58,11 +59,37 @@ public class Space {
     }
 
     /**
+     * Copy constructor for Space
+     * @param space the Space to copy
+     * @throws IllegalArgumentException when a null Space is passed
+     */
+    public Space(Space space) {
+        if (space != null) {
+            NAME = space.NAME;
+            MONEY_PENALTY = space.MONEY_PENALTY;
+            MOVEMENT_PENALTY = space.MOVEMENT_PENALTY;
+            SPACE_PENALTY = space.SPACE_PENALTY;
+            COLOR_GROUP = space.COLOR_GROUP;
+            PRICE_PER_HOUSE = space.PRICE_PER_HOUSE;
+            PRICE_PER_HOTEL = space.PRICE_PER_HOTEL;
+            DECK_USED = space.DECK_USED;
+            if (space.PROPERTY != null) {
+                PROPERTY = new Property(space.PROPERTY);
+            } else {
+                PROPERTY = null;
+            }
+        } else {
+            throw new IllegalArgumentException("A null Space was passed");
+        }
+    }
+
+    /**
      * Gets the name of this Space
      *
      * @return the name of this Space
      */
-    public String getNAME() {
+    @Override
+    public String toString() {
         return NAME;
     }
 

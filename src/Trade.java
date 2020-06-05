@@ -20,10 +20,15 @@ public class Trade {
     private int receiverMoney; //Stores the amount of money the receiver is offering
     private boolean isConfirmed; //Stores whether this Trade has been confirmed
 
-
-    public Trade(Player sender, Player receiver) {
+    /**
+     * Constructor for Trade. Validates according to the parameters outlined here
+     * @param sender the sender of the Trade
+     * @param receiver the receiver of the Trade
+     * @param prompt the prompt that should be shown to the receiver
+     */
+    public Trade(Player sender, Player receiver, String prompt) {
         if (sender != null && receiver != null) {
-            if (receiver.promptBoolean("Would you like to trade with " + sender + "?")) {
+            if (receiver.promptBoolean(prompt, null)) {
                 SENDER = sender;
                 RECEIVER = receiver;
                 isConfirmed = false;
@@ -83,6 +88,7 @@ public class Trade {
 
     /**
      * Gets the list of Properties being offered by the sender
+     *
      * @return the list of Properties being offered by the sender
      */
     public ArrayList<Property> getSenderProperties() {
@@ -92,6 +98,7 @@ public class Trade {
 
     /**
      * Gets the list of Properties being offered by the receiver
+     *
      * @return the list of Properties being offered by the receiver
      */
     public ArrayList<Property> getReceiverProperties() {
@@ -214,6 +221,7 @@ public class Trade {
 
     /**
      * Gets the list of Cards being offered by the sender
+     *
      * @return the list of Cards being offered by the sender
      */
     public ArrayList<Card> getSenderCards() {
@@ -222,6 +230,7 @@ public class Trade {
 
     /**
      * Gets the list of Cards being offered by the receiver
+     *
      * @return the list of Cards being offered by the receiver
      */
     public ArrayList<Card> getReceiverCards() {
@@ -306,6 +315,7 @@ public class Trade {
 
     /**
      * Gets the amount of money the sender is offering
+     *
      * @return the amount of money the sender is offering
      */
     public int getSenderMoney() {
@@ -314,6 +324,7 @@ public class Trade {
 
     /**
      * Gets the amount of money the receiver is offering
+     *
      * @return the amount of money the receiver is offering
      */
     public int getReceiverMoney() {
@@ -354,5 +365,21 @@ public class Trade {
         } else {
             throw new IllegalStateException("Tried to alter a Trade after it was confirmed");
         }
+    }
+
+    /**
+     * Gets the Player who is the sender of this Trade
+     * @return the sender of this Trade
+     */
+    public Player getSENDER() {
+        return SENDER;
+    }
+
+    /**
+     * Gets the Player who is the receiver of this Trade
+     * @return the receiver of the Trade
+     */
+    public Player getRECEIVER() {
+        return RECEIVER;
     }
 }

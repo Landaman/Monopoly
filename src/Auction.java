@@ -9,6 +9,7 @@ public class Auction {
     //Auction constants
     private final Property PROPERTY; //This stores the Property being auctioned
     private final ArrayList<Player> PLAYERS; //This stores the Players who are engaged in bidding for this Property. This can decline
+    private final String PROMPT; //The prompt that should be shown to Players
 
     //Auction fields
     private int currentValue; //This stores the current value being placed on the Property
@@ -19,15 +20,17 @@ public class Auction {
      *
      * @param property the Property being auctioned off
      * @param players  the players participating in the auction
+     * @param prompt the prompt that should be shown to Player each round
      * @throws IllegalArgumentException when a null or empty parameter is passed
      */
-    public Auction(Property property, ArrayList<Player> players) {
+    public Auction(Property property, ArrayList<Player> players, String prompt) {
         if (property != null && property.getOwner() == null && players != null &&
-                players.size() > 0) {
+                players.size() > 0 && prompt != null) {
             PROPERTY = property;
             PLAYERS = players;
             currentValue = 0;
             isConfirmed = false;
+            PROMPT = prompt;
         } else {
             throw new IllegalArgumentException("A null or empty parameter was passed");
         }
@@ -42,8 +45,8 @@ public class Auction {
     public void doRound() {
         if (!isConfirmed) {
             for (Player player : PLAYERS) {
-                int bid = player.promptInt("How much are you willing to bid for " + PROPERTY + "?",
-                        currentValue, -1, -1);
+                int bid = player.promptInt(PROMPT,
+                        currentValue + 1, -1, -1, this);
                 if (player.canAfford(bid)) {
                     if (bid > currentValue) {
                         currentValue = bid;
@@ -71,6 +74,13 @@ public class Auction {
         return currentValue;
     }
 
+    /**
+     * Gets the Property being auctioned
+     * @return the Property being auctioned
+     */
+    public Property getPROPERTY() {
+        return PROPERTY;
+    }
     /**
      * Gets whether or not this Auction is confirmed
      *

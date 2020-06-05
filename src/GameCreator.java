@@ -34,10 +34,10 @@ public class GameCreator {
                 propertyBuildPrices, propertyColorGroups, propertyMaxHouses, propertyRents, propertyStartingHouses,
                 propertyAreDiceMultipliers, propertyAreScaled, propertyAreMortgaged, propertyOwners);
         Player[] players = setupPlayers(playerNames, playerTypes, playerWallets, playerPositions, spaces.length,
-                playerJailCards, jailPosition, playerSalaries, numTurnsInJail, prompts);
+                playerJailCards, jailPosition, playerSalaries, numTurnsInJail, prompts, spaces, colorGroups);
         Dice[] dice = setupDice(numDice, diceSides);
         Deck[] deck = setupDecks(cardTypes, cardDescriptions, cardMoneyLosses, cardPerPlayer, cardMovementLosses,
-                cardSpaceLosses, cardColorGroup, cardRentMultiplier,cardPerHouses, cardPerHotels, cardGetOutJail, cardOwners,
+                cardSpaceLosses, cardColorGroup, cardRentMultiplier, cardPerHouses, cardPerHotels, cardGetOutJail, cardOwners,
                 spaces.length);
 
         return new Game();
@@ -201,19 +201,22 @@ public class GameCreator {
      * @param salaries       the salaries the Players should be awarded for passing go
      * @param numTurnsInJail the number of turns the Player should send in jail when they are sent there
      * @param prompts        the prompts that are used during the Game. This is only used for the AIPlayer Class
+     * @param gameBoard      the game board for use in the AIPlayer Class
+     * @param colorGroups the color groups used in the game board for the AIPLayer Class
      * @return the created Players Array
      * @throws IllegalArgumentException when a null or mismatched Array is passed
      */
     private static Player[] setupPlayers(String[] names, String[] types, int[] wallets, int[] positions, int boardSize,
-                                         int[] jailTurns, int jailPosition, int[] salaries, int[] numTurnsInJail, String[] prompts) {
+                                         int[] jailTurns, int jailPosition, int[] salaries, int[] numTurnsInJail,
+                                         String[] prompts, Space[] gameBoard, String[] colorGroups) {
         if (names != null && types != null && wallets != null && positions != null && jailTurns != null && salaries != null &&
-                numTurnsInJail != null && names.length == types.length && types.length == wallets.length && wallets.length == positions.length &&
-                positions.length == jailTurns.length && jailTurns.length == salaries.length &&
-                salaries.length == numTurnsInJail.length) {
+                numTurnsInJail != null && names.length == types.length && types.length == wallets.length &&
+                wallets.length == positions.length && positions.length == jailTurns.length &&
+                jailTurns.length == salaries.length && salaries.length == numTurnsInJail.length) {
             Player[] players = new Player[names.length];
             for (int i = 0; i < players.length; i++) {
                 players[i] = setupPlayer(names[i], types[i], wallets[i], positions[i], boardSize, jailTurns[i],
-                        jailPosition, salaries[i], numTurnsInJail[i], prompts);
+                        jailPosition, salaries[i], numTurnsInJail[i], prompts, gameBoard, colorGroups);
             }
             return players;
         } else {
@@ -235,13 +238,17 @@ public class GameCreator {
      * @param salary         the salaries the Players should be awarded for passing go. This must be greater than 0
      * @param numTurnsInJail the number of turns the Player should send in jail when they are sent there
      * @param prompts        the prompts that are used during the Game. This is only used for the AIPlayer Class
+     * @param gameBoard      the game board for use in the AIPlayer Class
+     * @param colorGroups the color groups on the game board for use in the AIPlayer Class
      * @return the created Player Object
      * @throws IllegalArgumentException when type is not ai or human
      */
     private static Player setupPlayer(String name, String type, int wallet, int position, int boardSize, int jailTurns,
-                                      int jailPosition, int salary, int numTurnsInJail, String[] prompts) {
+                                      int jailPosition, int salary, int numTurnsInJail, String[] prompts,
+                                      Space[] gameBoard, String[] colorGroups) {
         if (type.equals("ai")) {
-            return new AIPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary, numTurnsInJail, prompts);
+            return new AIPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary, numTurnsInJail,
+                    prompts, gameBoard, colorGroups);
         } else if (type.equals("human")) {
             return new HumanPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary, numTurnsInJail);
         } else {
@@ -281,20 +288,20 @@ public class GameCreator {
      * Sets up an Array of Decks. Validates according to the conditions outlined here. None of these Arrays can be null,
      * but the values in them may be null
      *
-     * @param cardTypes        the types of Cards to be created. This shouldn't be null
-     * @param cardDescriptions the descriptions of the Cards to be created. This shouldn't be null
-     * @param cardMoney        the amount of money the Player should gain from each of these Cards. This shouldn't be null
-     * @param cardPerPlayer    whether or not the value of cardMoney should be applied to each other Player, and then have
-     *                         the opposite done to the normal Player. This shouldn't be null
-     * @param cardMovement     the amount of Spaces the Player should move for landing using these Cards. This shouldn't be null
-     * @param cardSpace        the index of the Space the Player should go to for getting these Cards. This shouldn't be null
-     * @param cardColorGroup   the index of the Space the Player should go to for getting these Cards. This shouldn't be null
+     * @param cardTypes          the types of Cards to be created. This shouldn't be null
+     * @param cardDescriptions   the descriptions of the Cards to be created. This shouldn't be null
+     * @param cardMoney          the amount of money the Player should gain from each of these Cards. This shouldn't be null
+     * @param cardPerPlayer      whether or not the value of cardMoney should be applied to each other Player, and then have
+     *                           the opposite done to the normal Player. This shouldn't be null
+     * @param cardMovement       the amount of Spaces the Player should move for landing using these Cards. This shouldn't be null
+     * @param cardSpace          the index of the Space the Player should go to for getting these Cards. This shouldn't be null
+     * @param cardColorGroup     the index of the Space the Player should go to for getting these Cards. This shouldn't be null
      * @param cardRentMultiplier the rent multiplier that the Player should pay on the next Space they land on
-     * @param cardPerHouse     the amount of money the Player should pay per house owned. This shouldn't be null
-     * @param cardPerHotel     the amount of money the Player should pay per hotel owned. This shouldn't be null
-     * @param cardGetOutJail   whether or not these Cards are get out of jail cards. This shouldn't be null
-     * @param cardOwner        the Player who holds these cards. This shouldn't be null
-     * @param boardSize        the board's size. Used for validation, this isn't stored
+     * @param cardPerHouse       the amount of money the Player should pay per house owned. This shouldn't be null
+     * @param cardPerHotel       the amount of money the Player should pay per hotel owned. This shouldn't be null
+     * @param cardGetOutJail     whether or not these Cards are get out of jail cards. This shouldn't be null
+     * @param cardOwner          the Player who holds these cards. This shouldn't be null
+     * @param boardSize          the board's size. Used for validation, this isn't stored
      * @return the completed Array of Decks
      * @throws IllegalArgumentException when a null or mismatched Array is passed
      */
@@ -328,20 +335,20 @@ public class GameCreator {
      * Sets up a Deck. Validates according to the conditions outlined here. None of these Arrays can be null,
      * but the values in them may be null
      *
-     * @param cardTypes        the types of Cards to be created. This shouldn't be null
-     * @param cardDescriptions the descriptions of the Cards to be created. This shouldn't be null
-     * @param cardMoney        the amount of money the Player should gain from each of these Cards. This shouldn't be null
-     * @param cardPerPlayer    whether or not the value of cardMoney should be applied to each other Player, and then have
-     *                         the opposite done to the normal Player. This shouldn't be null
-     * @param cardMovement     the amount of Spaces the Player should move for landing using these Cards. This shouldn't be null
-     * @param cardSpace        the index of the Space the Player should go to for getting these Cards. This shouldn't be null
-     * @param cardColorGroup   the index of the Space the Player should go to for getting these Cards. This shouldn't be null
+     * @param cardTypes          the types of Cards to be created. This shouldn't be null
+     * @param cardDescriptions   the descriptions of the Cards to be created. This shouldn't be null
+     * @param cardMoney          the amount of money the Player should gain from each of these Cards. This shouldn't be null
+     * @param cardPerPlayer      whether or not the value of cardMoney should be applied to each other Player, and then have
+     *                           the opposite done to the normal Player. This shouldn't be null
+     * @param cardMovement       the amount of Spaces the Player should move for landing using these Cards. This shouldn't be null
+     * @param cardSpace          the index of the Space the Player should go to for getting these Cards. This shouldn't be null
+     * @param cardColorGroup     the index of the Space the Player should go to for getting these Cards. This shouldn't be null
      * @param cardRentMultiplier the multiplier that the Player should pay for the next Space they land on
-     * @param cardPerHouse     the amount of money the Player should pay per house owned. This shouldn't be null
-     * @param cardPerHotel     the amount of money the Player should pay per hotel owned. This shouldn't be null
-     * @param cardGetOutJail   whether or not these Cards are get out of jail cards. This shouldn't be null
-     * @param cardOwner        the Player who holds these cards. This shouldn't be null
-     * @param boardSize        the board's size. Used for validation, this isn't stored
+     * @param cardPerHouse       the amount of money the Player should pay per house owned. This shouldn't be null
+     * @param cardPerHotel       the amount of money the Player should pay per hotel owned. This shouldn't be null
+     * @param cardGetOutJail     whether or not these Cards are get out of jail cards. This shouldn't be null
+     * @param cardOwner          the Player who holds these cards. This shouldn't be null
+     * @param boardSize          the board's size. Used for validation, this isn't stored
      * @return the completed Deck
      * @throws IllegalArgumentException when a null or mismatched Array is passed
      */

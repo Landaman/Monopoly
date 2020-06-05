@@ -84,11 +84,12 @@ public class HumanPlayer implements Player {
      * Prompts the Player if they would like to do something
      *
      * @param description the description that should be shown to the Player
+     * @param object      the object that is part of this prompt
      * @return the Players decision whether or not to buy the card
      */
     @Override
-    public boolean promptBoolean(String description) {
-
+    public <T> boolean promptBoolean(String description, T object) {
+        return false;
     }
 
     /**
@@ -98,11 +99,12 @@ public class HumanPlayer implements Player {
      * @param min         the minimum value that the Player should be able to enter. Should be equal to none for none
      * @param max         the maximum value that the Player should be able to enter. Should be equal to none for none
      * @param none        the value the Player should enter for none
+     * @param object      the object that is part of htis prompt
      * @return the integer that the Player decides on
      */
     @Override
-    public int promptInt(String description, int min, int max, int none) {
-
+    public <T> int promptInt(String description, int min, int max, int none, T object) {
+        return 0;
     }
 
     /**
@@ -110,22 +112,11 @@ public class HumanPlayer implements Player {
      *
      * @param description the description that should be shown to the Player
      * @param objects     the Array that the Player should pick from
+     * @param extra       an additional Object that may be provided
      * @return the index of the chosen Object
      */
     @Override
-    public int promptArray(String description, Object[] objects) {
-
-    }
-
-    /**
-     * Prompts the Player to pick an Object out of the provided ArrayList
-     *
-     * @param description the description that should be shown to the player
-     * @param objects     the ArrayList that the Player should pick from
-     * @return the index of the chosen Object
-     */
-    @Override
-    public int promptArrayList(String description, ArrayList objects) {
+    public <T, S> int promptArray(String description, T[] objects, S extra) {
 
     }
 
