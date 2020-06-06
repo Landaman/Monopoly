@@ -7,38 +7,39 @@ public class GameCreator {
     public static Game makeGame(
             //Space parameters
             String[] spaceNames, int[] spaceMoneyLosses, int[] spaceMovementLosses, int[] spaceSpaceLosses,
-            int[] spaceDeckUsed, String[] spaceColorGroups, int[] spacePerHouses,
-            int[] spacePerHotels, String[] prompts,
+            String[] spaceColorGroups, double[] spaceRentMultipliers, double[] spaceRollMultipliers,
+            int[] spaceDeckUsed, int[] spacePerHouses, int[] spacePerHotels,
             //Property parameters
             boolean[] spaceHaveProperty, int[] propertyPrices, int[] propertyMortgages, double[] propertyMortgagePercent,
             int[] propertyBuildPrices, String[] propertyColorGroups, int[] propertyMaxHouses, int[][] propertyRents,
             int[] propertyStartingHouses, boolean[] propertyAreDiceMultipliers, boolean[] propertyAreScaled,
             boolean[] propertyAreMortgaged, Player[] propertyOwners,
             //Game parameters
-            String[] colorGroups, int jailPosition, int bailCost,
+            String[] colorGroups, int jailPosition, int bailCost, String[] prompts,
             //Player parameters
             String[] playerNames, String[] playerTypes, int[] playerWallets, int[] playerPositions,
-            int[] playerJailCards, int[] playerSalaries, int[] numTurnsInJail,
+            int[] playerJailTurns, int[] playerSalaries, int[] numTurnsInJail,
             //Dice parameters
             int numDice, int diceSides,
             //Deck parameters
             String[][] cardTypes, String[][] cardDescriptions, int[][] cardMoneyLosses, boolean[][] cardPerPlayer,
             int[][] cardMovementLosses, int[][] cardSpaceLosses, String[][] cardColorGroup, double[][] cardRentMultiplier,
-            int[][] cardPerHouses, int[][] cardPerHotels, boolean[][] cardGetOutJail, Player[][] cardOwners) {
+            double[][] cardRollMultiplier, int[][] cardPerHouses, int[][] cardPerHotels, boolean[][] cardGetOutJail,
+            Player[][] cardOwners) {
         Space[] spaces = setupSpaces(
                 //Space parameters
-                spaceNames, spaceMoneyLosses, spaceMovementLosses, spaceSpaceLosses, spaceColorGroups, spacePerHouses,
-                spacePerHotels, spaceDeckUsed, cardTypes.length,
+                spaceNames, spaceMoneyLosses, spaceMovementLosses, spaceSpaceLosses, spaceColorGroups, spaceRentMultipliers,
+                spaceRollMultipliers, spacePerHouses, spacePerHotels, spaceDeckUsed, cardTypes.length,
                 //Property parameters
                 spaceHaveProperty, propertyPrices, propertyMortgages, propertyMortgagePercent,
                 propertyBuildPrices, propertyColorGroups, propertyMaxHouses, propertyRents, propertyStartingHouses,
                 propertyAreDiceMultipliers, propertyAreScaled, propertyAreMortgaged, propertyOwners);
         Player[] players = setupPlayers(playerNames, playerTypes, playerWallets, playerPositions, spaces.length,
-                playerJailCards, jailPosition, playerSalaries, numTurnsInJail, prompts, spaces, colorGroups);
+                playerJailTurns, jailPosition, playerSalaries, numTurnsInJail, prompts, spaces, colorGroups);
         Dice[] dice = setupDice(numDice, diceSides);
         Deck[] deck = setupDecks(cardTypes, cardDescriptions, cardMoneyLosses, cardPerPlayer, cardMovementLosses,
-                cardSpaceLosses, cardColorGroup, cardRentMultiplier, cardPerHouses, cardPerHotels, cardGetOutJail, cardOwners,
-                spaces.length);
+                cardSpaceLosses, cardColorGroup, cardRentMultiplier, cardRollMultiplier, cardPerHouses, cardPerHotels,
+                cardGetOutJail, cardOwners, spaces.length);
 
         return new Game();
     }
@@ -58,6 +59,8 @@ public class GameCreator {
      *                                  less than -1, which is if they shouldn't move
      * @param colorGroups               the color group that the player should go to as a penalty for landing on this space. Can be
      *                                  null for none
+     * @param rentMultipliers           the multiplier of the rent that should be paid
+     * @param rollMultipliers           the amount that should be multiplied by a new roll as payment for rent instead of normal
      * @param perHouses                 the amount the Player should pay per house. Shouldn't be less than 0
      * @param perHotels                 the amount the Player should pay per hotel. Shouldn't be less than 0
      * @param deckUsed                  the index of the Deck that this Space should use. Shouldn't be less than -1, which represents no
@@ -66,6 +69,7 @@ public class GameCreator {
      * @param haveProperty              whether or not these Space's have a Property. Should be false if not
      * @param propertyPrices            the price of this Property. This should be greater than 0
      * @param propertyMortgages         the mortgage of these Property. This should be greater than 0 and should be less then the price
+     * @param propertyMortgagePercent   the percent of mortgage that should be paid as interest
      * @param propertyBuildPrices       the price of building on these Property's. This should be greater than 0
      * @param propertyColorGroups       the color group of these Property's. This shouldn't be null
      * @param propertyMaxHouses         the maximum number of houses on these Property's. This shouldn't be negative
@@ -81,7 +85,7 @@ public class GameCreator {
     private static Space[] setupSpaces(
             //Space parameters
             String[] names, int[] moneyLosses, int[] movementLosses, int[] spaceLosses, String[] colorGroups,
-            int[] perHouses, int[] perHotels, int[] deckUsed, int numDecks,
+            double[] rentMultipliers, double[] rollMultipliers, int[] perHouses, int[] perHotels, int[] deckUsed, int numDecks,
             //Property parameters
             boolean[] haveProperty, int[] propertyPrices, int[] propertyMortgages, double[] propertyMortgagePercent,
             int[] propertyBuildPrices, String[] propertyColorGroups, int[] propertyMaxHouses, int[][] propertyRents,
@@ -89,11 +93,12 @@ public class GameCreator {
             boolean[] propertyAreMortgaged,
             Player[] propertyOwners) {
         if (names != null && moneyLosses != null && movementLosses != null && spaceLosses != null && //Space validation
-                colorGroups != null && perHouses != null && perHotels != null && deckUsed != null &&
-                names.length == moneyLosses.length && moneyLosses.length == movementLosses.length &&
-                movementLosses.length == spaceLosses.length && spaceLosses.length == colorGroups.length &&
-                colorGroups.length == perHouses.length && perHouses.length == perHotels.length &&
-                perHotels.length == deckUsed.length &&
+                colorGroups != null && rentMultipliers != null && rollMultipliers != null &&
+                perHouses != null && perHotels != null && deckUsed != null && names.length == moneyLosses.length &&
+                moneyLosses.length == movementLosses.length && movementLosses.length == spaceLosses.length &&
+                spaceLosses.length == colorGroups.length && colorGroups.length == rentMultipliers.length &&
+                rentMultipliers.length == rollMultipliers.length && rollMultipliers.length == perHouses.length &&
+                perHouses.length == perHotels.length && perHotels.length == deckUsed.length &&
                 //Property validation
                 haveProperty != null && propertyPrices != null && propertyMortgages != null && propertyMortgagePercent != null &&
                 propertyBuildPrices != null && propertyColorGroups != null && propertyMaxHouses != null &&
@@ -114,8 +119,8 @@ public class GameCreator {
             for (int i = 0; i < spaces.length; i++) {
                 spaces[i] = setupSpace(
                         //Space parameters
-                        names[i], moneyLosses[i], movementLosses[i], spaceLosses[i], colorGroups[i], perHouses[i],
-                        perHotels[i], deckUsed[i], spaces.length, numDecks,
+                        names[i], moneyLosses[i], movementLosses[i], spaceLosses[i], colorGroups[i], rentMultipliers[i],
+                        rollMultipliers[i], perHouses[i], perHotels[i], deckUsed[i], spaces.length, numDecks,
                         //Property parameters
                         haveProperty[i], propertyPrices[i], propertyMortgages[i], propertyMortgagePercent[i], propertyBuildPrices[i],
                         propertyColorGroups[i], propertyMaxHouses[i], propertyRents[i], propertyStartingHouses[i],
@@ -137,6 +142,8 @@ public class GameCreator {
      *                                 if they shouldn't move
      * @param colorGroup               the color group that the player should go to as a penalty for landing on this space. Can be
      *                                 null for none
+     * @param rentMultiplier           the multiplier that the Player should have to pay on the rent of the next Space they land on
+     * @param rollMultiplier           the amount that should be multiplied by a new roll as payment for rent instead of normal
      * @param perHouse                 the amount the Player should pay per house owned. Shouldn't be less than 0
      * @param perHotel                 the amount the Player should pay per hotel owned. Shouldn't be less than 0
      * @param deckUsed                 the index of the Deck that this Card should use. Shouldn't be less than -1, which represents no
@@ -161,8 +168,8 @@ public class GameCreator {
      */
     private static Space setupSpace(
             //Space parameters
-            String name, int moneyLoss, int movementLoss, int spaceLoss, String colorGroup, int perHouse, int perHotel,
-            int deckUsed, int boardSize, int numDecks,
+            String name, int moneyLoss, int movementLoss, int spaceLoss, String colorGroup, double rentMultiplier,
+            double rollMultiplier, int perHouse, int perHotel, int deckUsed, int boardSize, int numDecks,
             //Property parameters
             boolean hasProperty, int propertyPrice, int propertyMortgage, double propertyMortgagePercent, int propertyBuildPrice,
             String propertyColorGroup, int propertyMaxHouses, int[] propertyRents, int propertyStartingHouses,
@@ -171,14 +178,15 @@ public class GameCreator {
         if (hasProperty) {
             return new Space(
                     //Space creation
-                    name, moneyLoss, movementLoss, spaceLoss, colorGroup, perHouse, perHotel, deckUsed, boardSize, numDecks,
+                    name, moneyLoss, movementLoss, spaceLoss, colorGroup, rentMultiplier, rollMultiplier, perHouse,
+                    perHotel, deckUsed, boardSize, numDecks,
                     //Property creation
                     new Property(propertyPrice, propertyMortgage, propertyMortgagePercent, propertyBuildPrice, propertyColorGroup,
                             propertyMaxHouses, propertyRents, propertyStartingHouses, propertyIsDiceMultiplier,
                             propertyIsScaled, propertyIsMortgaged, propertyOwner, name));
         } else {
-            return new Space(name, moneyLoss, movementLoss, spaceLoss, colorGroup, perHouse, perHotel, deckUsed,
-                    boardSize, numDecks, null);
+            return new Space(name, moneyLoss, movementLoss, spaceLoss, colorGroup, rentMultiplier, rollMultiplier,
+                    perHouse, perHotel, deckUsed, boardSize, numDecks, null);
         }
     }
 
@@ -202,7 +210,7 @@ public class GameCreator {
      * @param numTurnsInJail the number of turns the Player should send in jail when they are sent there
      * @param prompts        the prompts that are used during the Game. This is only used for the AIPlayer Class
      * @param gameBoard      the game board for use in the AIPlayer Class
-     * @param colorGroups the color groups used in the game board for the AIPLayer Class
+     * @param colorGroups    the color groups used in the game board for the AIPLayer Class
      * @return the created Players Array
      * @throws IllegalArgumentException when a null or mismatched Array is passed
      */
@@ -239,7 +247,7 @@ public class GameCreator {
      * @param numTurnsInJail the number of turns the Player should send in jail when they are sent there
      * @param prompts        the prompts that are used during the Game. This is only used for the AIPlayer Class
      * @param gameBoard      the game board for use in the AIPlayer Class
-     * @param colorGroups the color groups on the game board for use in the AIPlayer Class
+     * @param colorGroups    the color groups on the game board for use in the AIPlayer Class
      * @return the created Player Object
      * @throws IllegalArgumentException when type is not ai or human
      */
@@ -297,6 +305,7 @@ public class GameCreator {
      * @param cardSpace          the index of the Space the Player should go to for getting these Cards. This shouldn't be null
      * @param cardColorGroup     the index of the Space the Player should go to for getting these Cards. This shouldn't be null
      * @param cardRentMultiplier the rent multiplier that the Player should pay on the next Space they land on
+     * @param cardRollMultiplier the amount that should be multiplied by a new roll as payment for rent instead of normal
      * @param cardPerHouse       the amount of money the Player should pay per house owned. This shouldn't be null
      * @param cardPerHotel       the amount of money the Player should pay per hotel owned. This shouldn't be null
      * @param cardGetOutJail     whether or not these Cards are get out of jail cards. This shouldn't be null
@@ -307,22 +316,24 @@ public class GameCreator {
      */
     private static Deck[] setupDecks(String[][] cardTypes, String[][] cardDescriptions, int[][] cardMoney,
                                      boolean[][] cardPerPlayer, int[][] cardMovement, int[][] cardSpace,
-                                     String[][] cardColorGroup, double[][] cardRentMultiplier, int[][] cardPerHouse, int[][] cardPerHotel,
-                                     boolean[][] cardGetOutJail, Player[][] cardOwner, int boardSize) {
+                                     String[][] cardColorGroup, double[][] cardRentMultiplier, double[][] cardRollMultiplier,
+                                     int[][] cardPerHouse, int[][] cardPerHotel, boolean[][] cardGetOutJail,
+                                     Player[][] cardOwner, int boardSize) {
         if (cardTypes != null && cardDescriptions != null && cardMoney != null && cardPerPlayer != null &&
                 cardMovement != null && cardSpace != null && cardColorGroup != null && cardRentMultiplier != null &&
-                cardPerHouse != null && cardPerHotel != null && cardGetOutJail != null && cardOwner != null &&
-                cardTypes.length == cardDescriptions.length && cardDescriptions.length == cardMoney.length &&
-                cardMoney.length == cardPerPlayer.length && cardPerPlayer.length == cardMovement.length &&
-                cardMovement.length == cardSpace.length && cardSpace.length == cardColorGroup.length &&
-                cardColorGroup.length == cardRentMultiplier.length && cardRentMultiplier.length == cardPerHouse.length &&
+                cardRollMultiplier != null && cardPerHouse != null && cardPerHotel != null && cardGetOutJail != null &&
+                cardOwner != null && cardTypes.length == cardDescriptions.length &&
+                cardDescriptions.length == cardMoney.length && cardMoney.length == cardPerPlayer.length &&
+                cardPerPlayer.length == cardMovement.length && cardMovement.length == cardSpace.length &&
+                cardSpace.length == cardColorGroup.length && cardColorGroup.length == cardRentMultiplier.length &&
+                cardRentMultiplier.length == cardRollMultiplier.length && cardRollMultiplier.length == cardPerHouse.length &&
                 cardPerHouse.length == cardPerHotel.length && cardPerHotel.length == cardGetOutJail.length &&
                 cardGetOutJail.length == cardOwner.length) {
             Deck[] decks = new Deck[cardTypes.length];
             for (int i = 0; i < decks.length; i++) {
                 decks[i] = setupDeck(cardTypes[i], cardDescriptions[i], cardMoney[i], cardPerPlayer[i], cardMovement[i],
-                        cardSpace[i], cardColorGroup[i], cardRentMultiplier[i], cardPerHouse[i], cardPerHotel[i], cardGetOutJail[i],
-                        cardOwner[i], boardSize);
+                        cardSpace[i], cardColorGroup[i], cardRentMultiplier[i], cardRollMultiplier[i], cardPerHouse[i],
+                        cardPerHotel[i], cardGetOutJail[i], cardOwner[i], boardSize);
             }
             return decks;
         } else {
@@ -344,6 +355,7 @@ public class GameCreator {
      * @param cardSpace          the index of the Space the Player should go to for getting these Cards. This shouldn't be null
      * @param cardColorGroup     the index of the Space the Player should go to for getting these Cards. This shouldn't be null
      * @param cardRentMultiplier the multiplier that the Player should pay for the next Space they land on
+     * @param cardRollMultiplier the amount that should be multiplied by a new roll as payment for rent instead of normal
      * @param cardPerHouse       the amount of money the Player should pay per house owned. This shouldn't be null
      * @param cardPerHotel       the amount of money the Player should pay per hotel owned. This shouldn't be null
      * @param cardGetOutJail     whether or not these Cards are get out of jail cards. This shouldn't be null
@@ -354,21 +366,23 @@ public class GameCreator {
      */
     private static Deck setupDeck(String[] cardTypes, String[] cardDescriptions, int[] cardMoney,
                                   boolean[] cardPerPlayer, int[] cardMovement, int[] cardSpace, String[] cardColorGroup,
-                                  double[] cardRentMultiplier, int[] cardPerHouse, int[] cardPerHotel,
-                                  boolean[] cardGetOutJail, Player[] cardOwner, int boardSize) {
+                                  double[] cardRentMultiplier, double[] cardRollMultiplier, int[] cardPerHouse,
+                                  int[] cardPerHotel, boolean[] cardGetOutJail, Player[] cardOwner, int boardSize) {
         if (cardTypes != null && cardDescriptions != null && cardMoney != null && cardPerPlayer != null &&
-                cardMovement != null && cardSpace != null && cardColorGroup != null && cardPerHouse != null &&
-                cardPerHotel != null && cardGetOutJail != null && cardOwner != null &&
-                cardTypes.length == cardDescriptions.length && cardDescriptions.length == cardMoney.length &&
-                cardMoney.length == cardPerPlayer.length && cardPerPlayer.length == cardMovement.length &&
-                cardMovement.length == cardSpace.length && cardSpace.length == cardColorGroup.length &&
-                cardColorGroup.length == cardPerHouse.length && cardPerHouse.length == cardPerHotel.length &&
-                cardPerHotel.length == cardGetOutJail.length && cardGetOutJail.length == cardOwner.length) {
+                cardMovement != null && cardSpace != null && cardColorGroup != null && cardRentMultiplier != null &&
+                cardRollMultiplier != null && cardPerHouse != null && cardPerHotel != null && cardGetOutJail != null &&
+                cardOwner != null && cardTypes.length == cardDescriptions.length &&
+                cardDescriptions.length == cardMoney.length && cardMoney.length == cardPerPlayer.length &&
+                cardPerPlayer.length == cardMovement.length && cardMovement.length == cardSpace.length &&
+                cardSpace.length == cardColorGroup.length && cardColorGroup.length == cardRentMultiplier.length &&
+                cardRentMultiplier.length == cardRollMultiplier.length && cardRollMultiplier.length == cardPerHouse.length &&
+                cardPerHouse.length == cardPerHotel.length && cardPerHotel.length == cardGetOutJail.length &&
+                cardGetOutJail.length == cardOwner.length) {
             Card[] cards = new Card[cardTypes.length];
             for (int i = 0; i < cards.length; i++) {
                 cards[i] = new Card(cardTypes[i], cardDescriptions[i], cardMoney[i], cardPerPlayer[i], cardMovement[i],
-                        cardSpace[i], cardColorGroup[i], cardRentMultiplier[i], cardPerHouse[i], cardPerHotel[i], cardGetOutJail[i],
-                        cardOwner[i], boardSize);
+                        cardSpace[i], cardColorGroup[i], cardRentMultiplier[i], cardRollMultiplier[i], cardPerHouse[i],
+                        cardPerHotel[i], cardGetOutJail[i], cardOwner[i], boardSize);
             }
             return new Deck(cards);
         } else {

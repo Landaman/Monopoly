@@ -72,6 +72,7 @@ public class Property {
 
     /**
      * Copy constructor for Property
+     *
      * @param property the Property to copy
      * @throws IllegalArgumentException when a null Property is passed
      */

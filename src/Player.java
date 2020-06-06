@@ -1,6 +1,3 @@
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-
 /**
  * Represents a Player
  *
@@ -24,9 +21,9 @@ public interface Player {
     /**
      * Prompts the Player if they would like to do something
      *
-     * @param <T> the type of the potential Object being passed
+     * @param <T>         the type of the potential Object being passed
      * @param description the description that should be shown to the Player
-     * @param object the object that is part of this prompt
+     * @param object      the object that is part of this prompt
      * @return the Players decision whether or not to buy the card
      */
     <T> boolean promptBoolean(String description, T object);
@@ -34,12 +31,12 @@ public interface Player {
     /**
      * Prompts the Player for an integer value
      *
-     * @param <T> the type of the potential Object being passed
+     * @param <T>         the type of the potential Object being passed
      * @param description the description that should be shown to the Player
      * @param min         the minimum value that the Player should be able to enter. Should be equal to none for none
      * @param max         the maximum value that the Player should be able to enter. Should be equal to none for none
      * @param none        the value the Player should enter for none
-     * @param object the object that is part of this prompt
+     * @param object      the object that is part of this prompt
      * @return the integer that the Player decides on
      */
     <T> int promptInt(String description, int min, int max, int none, T object);
@@ -47,10 +44,10 @@ public interface Player {
     /**
      * Prompts the Player to pick an Object out of the provided Array
      *
-     * @param <T> the type of the Array
+     * @param <T>         the type of the Array
      * @param description the description that should be shown to the Player
      * @param objects     the Array that the Player should pick from
-     * @param extra an additional Object that may be provided
+     * @param extra       an additional Object that may be provided
      * @return the index of the chosen Object
      */
     <T, S> int promptArray(String description, T[] objects, S extra);

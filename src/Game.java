@@ -118,7 +118,8 @@ public class Game {
 
     /**
      * Validates the passed gameBoard and colorGroups
-     * @param gameBoard the game board to read
+     *
+     * @param gameBoard   the game board to read
      * @param colorGroups the color groups to read
      * @return whether or not the passed game board and color groups are valid
      * @throws IllegalArgumentException when a null parameter is passed
@@ -1045,32 +1046,65 @@ public class Game {
      *
      * @param space  the Space that the Player landed on
      * @param player the Player that landed on the Space
+     * @param rolls  the rolls that the Player did
      * @throws IllegalArgumentException when a null or invalid parameter is passed
      */
-    private void handleSpace(Space space, Player player) {
+    private void handleSpace(Space space, Player player, int[] rolls) {
         if (space != null && player != null) {
             if (space.getPROPERTY() == null) { //If the Space doesn't have a Property, we should look for its penalty
                 if (space.getMONEY_PENALTY() != 0) { //If this is the case then we should pay the Player that amount
                     doMandatoryTransaction(player, space.getMONEY_PENALTY(), null);
                 } else if (space.getMOVEMENT_PENALTY() != 0) { //If this is the case, the Player should move that amount
                     player.move(space.getMONEY_PENALTY());
+                    if (space.getRENT_MULTIPLIER() != 0 && GAME_BOARD[player.getPosition()].getPROPERTY() != null &&
+                            GAME_BOARD[player.getPosition()].getPROPERTY().getOwner() != null) {
+                        doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
+                                        (GAME_BOARD[player.getPosition()].getPROPERTY().IS_DICE_MULTIPLIER() ? calcRollTotal(rolls) : 1) *
+                                        (int) Math.round(1 - space.getRENT_MULTIPLIER()),
+                                GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                        if (space.getROLL_MULTIPLIER() != 0) {
+                            doMandatoryTransaction(player, (int) Math.round(-space.getROLL_MULTIPLIER() *
+                                    calcRollTotal(getRoll(DICE))), GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                        }
+                    }
                 } else if (space.getSPACE_PENALTY() != -1) { //If this is the case, the Player should go to that Space
                     player.goToSpace(space.getSPACE_PENALTY());
+                    if (space.getRENT_MULTIPLIER() != 0 && GAME_BOARD[player.getPosition()].getPROPERTY() != null &&
+                            GAME_BOARD[player.getPosition()].getPROPERTY().getOwner() != null) {
+                        doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
+                                (GAME_BOARD[player.getPosition()].getPROPERTY().IS_DICE_MULTIPLIER() ? calcRollTotal(rolls) : 1) *
+                                (int) Math.round(1 - space.getRENT_MULTIPLIER()), GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                        if (space.getROLL_MULTIPLIER() != 0) {
+                            doMandatoryTransaction(player, (int) Math.round(-space.getROLL_MULTIPLIER() *
+                                    calcRollTotal(getRoll(DICE))), GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                        }
+                    }
                 } else if (space.getCOLOR_GROUP() != null) { //If this is the case, the Player should go to that color group
                     player.goToSpace(getNearestInColorGroup(space.getCOLOR_GROUP(), GAME_BOARD, player.getPosition()));
+                    if (space.getRENT_MULTIPLIER() != 0 && GAME_BOARD[player.getPosition()].getPROPERTY() != null &&
+                            GAME_BOARD[player.getPosition()].getPROPERTY().getOwner() != null) {
+                        doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
+                                        (GAME_BOARD[player.getPosition()].getPROPERTY().IS_DICE_MULTIPLIER() ? calcRollTotal(rolls) : 1) *
+                                        (int) Math.round(1 - space.getRENT_MULTIPLIER()),
+                                GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                        if (space.getROLL_MULTIPLIER() != 0) {
+                            doMandatoryTransaction(player, (int) Math.round(-space.getROLL_MULTIPLIER() *
+                                    calcRollTotal(getRoll(DICE))), GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                        }
+                    }
                 } else if (space.getPRICE_PER_HOUSE() != 0) { //If this is the case, the Player should pay that amount per house and then hotel (the two share the same state)
                     if (doMandatoryTransaction(player, -space.getPRICE_PER_HOUSE() * playerNumHouses(GAME_BOARD, player), null)) {
                         doMandatoryTransaction(player, -space.getPRICE_PER_HOTEL() * playerNumHotels(GAME_BOARD, player), null);
                     }
                 } else if (space.getDECK_USED() != -1) { //If this is the case, the Player should draw from that deck
                     if (space.getDECK_USED() >= 0 && space.getDECK_USED() < DECKS.length) {
-                        handleCard(DECKS[space.getDECK_USED()].getCard(), player);
+                        handleCard(DECKS[space.getDECK_USED()].getCard(), player, rolls);
                     } else {
                         throw new IllegalArgumentException("An invalid Space was passed");
                     }
                 }
             } else {
-                handleProperty(space.getPROPERTY(), player);
+                handleProperty(space.getPROPERTY(), player, rolls);
             }
         } else {
             throw new IllegalArgumentException("A null parameter was passed");
@@ -1082,9 +1116,10 @@ public class Game {
      *
      * @param card   the Card the Player drew
      * @param player the Player that drew the Card
+     * @param rolls  the rolls the Player did
      * @throws IllegalArgumentException when a null parameter is passed
      */
-    private void handleCard(Card card, Player player) {
+    private void handleCard(Card card, Player player, int[] rolls) {
         if (card != null && player != null) {
             if (card.getMONEY() != 0) { //If this is the case, the Player should gain this amount
                 if (!card.isPER_PLAYER()) {
@@ -1101,21 +1136,42 @@ public class Game {
                 }
             } else if (card.getMOVEMENT() != 0) { //If this is the case, the Player should move this amount
                 player.move(card.getMOVEMENT());
-                if (card.getRENT_MULTIPLIER() != 0) {
+                if (card.getRENT_MULTIPLIER() != 0 && GAME_BOARD[player.getPosition()].getPROPERTY() != null &&
+                        GAME_BOARD[player.getPosition()].getPROPERTY().getOwner() != null) {
                     doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
-                            (int) Math.round(1 - card.getRENT_MULTIPLIER()), null);
+                                    (GAME_BOARD[player.getPosition()].getPROPERTY().IS_DICE_MULTIPLIER() ? calcRollTotal(rolls) : 1) *
+                                    (int) Math.round(1 - card.getRENT_MULTIPLIER()),
+                            GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                    if (card.getROLL_MULTIPLIER() != 0) {
+                        doMandatoryTransaction(player, (int) Math.round(-card.getROLL_MULTIPLIER() *
+                                calcRollTotal(getRoll(DICE))), GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                    }
                 }
             } else if (card.getSPACE() != -1) { //If this is the case, the Player should go to this Space
                 player.goToSpace(card.getSPACE());
-                if (card.getRENT_MULTIPLIER() != 0) {
+                if (card.getRENT_MULTIPLIER() != 0 && GAME_BOARD[player.getPosition()].getPROPERTY() != null &&
+                        GAME_BOARD[player.getPosition()].getPROPERTY().getOwner() != null) {
                     doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
-                            (int) Math.round(1 - card.getRENT_MULTIPLIER()), null);
+                                    (GAME_BOARD[player.getPosition()].getPROPERTY().IS_DICE_MULTIPLIER() ? calcRollTotal(rolls) : 1) *
+                                    (int) Math.round(1 - card.getRENT_MULTIPLIER()),
+                            GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                    if (card.getROLL_MULTIPLIER() != 0) {
+                        doMandatoryTransaction(player, (int) Math.round(-card.getROLL_MULTIPLIER() *
+                                calcRollTotal(getRoll(DICE))), GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                    }
                 }
             } else if (card.getCOLOR_GROUP() != null) { //If this is the case, the Player should go to this color group
                 player.goToSpace(getNearestInColorGroup(card.getCOLOR_GROUP(), GAME_BOARD, player.getPosition()));
-                if (card.getRENT_MULTIPLIER() != 0) {
+                if (card.getRENT_MULTIPLIER() != 0 && GAME_BOARD[player.getPosition()].getPROPERTY() != null &&
+                        GAME_BOARD[player.getPosition()].getPROPERTY().getOwner() != null) {
                     doMandatoryTransaction(player, -GAME_BOARD[player.getPosition()].getPROPERTY().getRent() *
-                            (int) Math.round(1 - card.getRENT_MULTIPLIER()), null);
+                                    (GAME_BOARD[player.getPosition()].getPROPERTY().IS_DICE_MULTIPLIER() ? calcRollTotal(rolls) : 1) *
+                                    (int) Math.round(1 - card.getRENT_MULTIPLIER()),
+                            GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                    if (card.getROLL_MULTIPLIER() != 0) {
+                        doMandatoryTransaction(player, (int) Math.round(-card.getROLL_MULTIPLIER() *
+                                calcRollTotal(getRoll(DICE))), GAME_BOARD[player.getPosition()].getPROPERTY().getOwner());
+                    }
                 }
             } else if (card.getPRICE_PER_HOUSE() != 0) { //If this is the case, the Player pay that amount per house and per hotel (they are linked)
                 if (doMandatoryTransaction(player, -card.getPRICE_PER_HOUSE() * playerNumHouses(GAME_BOARD, player), null)) {
@@ -1134,8 +1190,9 @@ public class Game {
      *
      * @param property the Property the Player landed on
      * @param player   the Player who landed on the Space
+     * @param rolls    the rolls that the Player did
      */
-    private void handleProperty(Property property, Player player) {
+    private void handleProperty(Property property, Player player, int[] rolls) {
         if (property != null && player != null) {
             if (property.getOwner() == null) { //If this is the case, the Player can buy the Property
                 if (player.canAfford(property.getPRICE()) && player.promptBoolean(PROMPTS[4], property)) { //If this is the case, the Player will buy the Property
@@ -1146,7 +1203,8 @@ public class Game {
                 }
             } else {
                 if (!property.getOwner().equals(player)) { //If this is the case, the Player owes the owner rent
-                    if (doMandatoryTransaction(player, -property.getRent(), property.getOwner())) {
+                    if (doMandatoryTransaction(player, -property.getRent() *
+                            (property.IS_DICE_MULTIPLIER() ? calcRollTotal(rolls) : 1), property.getOwner())) {
                         property.getOwner().updateWallet(property.getRent());
                     }
                 }
@@ -1339,7 +1397,7 @@ public class Game {
 
             while (startingPlayerNumber == PLAYERS.size() && startingPosition != player.getPosition()) { //Theoretically the Player could go around the board forever depending on the moves, so until they don't move after the Space is processed we'll keep processing the Spaces
                 startingPosition = player.getPosition();
-                handleSpace(GAME_BOARD[player.getPosition()], player);
+                handleSpace(GAME_BOARD[player.getPosition()], player, rolls);
                 updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
             }
 

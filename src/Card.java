@@ -18,6 +18,7 @@ public class Card {
     private final int SPACE; //Stores the index of the Space the Player should go to. Should be -1 for no movement
     private final String COLOR_GROUP; //Stores the color group the Player should go to. Should be null if they shouldn't move
     private final double RENT_MULTIPLIER; //Stores the multiplier that the Player should pay on the Space they land on
+    private final double ROLL_MULTIPLIER; //Stores the multiplier that the Player should pay on a new roll on the Space they land on. This requires RENT_MULTIPLIER to be 0 to cancel the previous roll
     private final int PRICE_PER_HOUSE; //Stores the amount the Player should pay per house owned. Should be 0 for no charge
     private final int PRICE_PER_HOTEL; //Stores the amount the Player should pay per hotel owned. Should be 0 for no charge
     private final boolean IS_GET_OUT_JAIL; //Stores whether or not this Card is a get out of jail free. Should be false if not
@@ -37,7 +38,8 @@ public class Card {
      * @param space          the index of the Space the Player should go to. Should be -1 for no movement
      * @param colorGroup     the color group that the Player should go to. Should be null if they shouldn't move
      * @param rentMultiplier the multiplier that the Player should pay on the rent of the Space they land on.
-     *                       This should be tied to movement, space, or color group
+     *                       this should be tied to movement, space, or color group
+     * @param rollMultiplier the multiplier the Player should pay on a new roll
      * @param perHouse       the amount that the Player should pay per house owned. Should be 0 for no charge
      * @param perHotel       the amount that the Player should pay per hotel owned. Should be 0 for no charge
      * @param getOutJail     whether or not this is a get out of jail free Card. Should be false if not
@@ -46,10 +48,12 @@ public class Card {
      * @throws IllegalArgumentException when an invalid parameter is passed
      */
     public Card(String type, String description, int money, boolean perPlayer, int movement, int space, String colorGroup,
-                double rentMultiplier, int perHouse, int perHotel, boolean getOutJail, Player own, int boardSize) {
+                double rentMultiplier, double rollMultiplier, int perHouse, int perHotel, boolean getOutJail, Player own,
+                int boardSize) {
         if (type != null && description != null && !(perPlayer && money == 0) && space >= -1 && rentMultiplier >= 0 &&
-                !((perHouse != 0 && perHotel == 0) || (perHouse == 0 && perHotel != 0)) &&
-                !((movement == 0 && space == -1 && colorGroup == null && rentMultiplier != 0)) &&
+                rollMultiplier >= 0 && !((perHouse != 0 && perHotel == 0) || (perHouse == 0 && perHotel != 0)) &&
+                !(rollMultiplier != 0 && rentMultiplier != 0) &&
+                !((movement == 0 && space == -1 && colorGroup == null && rentMultiplier != 1.0)) &&
                 !((money != 0 || movement != 0 || space != -1 || colorGroup != null || perHouse != 0) && getOutJail) &&
                 !((money != 0 || movement != 0 || space != -1 || colorGroup != null || getOutJail) && perHouse != 0) &&
                 !((money != 0 || movement != 0 || space != -1 || getOutJail || perHouse != 0) && colorGroup != null) &&
@@ -64,6 +68,7 @@ public class Card {
             SPACE = space;
             COLOR_GROUP = colorGroup;
             RENT_MULTIPLIER = rentMultiplier;
+            ROLL_MULTIPLIER = rollMultiplier;
             PRICE_PER_HOUSE = perHouse;
             PRICE_PER_HOTEL = perHotel;
             IS_GET_OUT_JAIL = getOutJail;
@@ -143,6 +148,15 @@ public class Card {
      */
     public double getRENT_MULTIPLIER() {
         return RENT_MULTIPLIER;
+    }
+
+    /**
+     * Gets the roll multiplier that the Player should have on the next Space they land on
+     *
+     * @return the roll multiplier that the Player should have to pay
+     */
+    public double getROLL_MULTIPLIER() {
+        return ROLL_MULTIPLIER;
     }
 
     /**

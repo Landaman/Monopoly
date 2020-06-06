@@ -20,7 +20,7 @@ public class Auction {
      *
      * @param property the Property being auctioned off
      * @param players  the players participating in the auction
-     * @param prompt the prompt that should be shown to Player each round
+     * @param prompt   the prompt that should be shown to Player each round
      * @throws IllegalArgumentException when a null or empty parameter is passed
      */
     public Auction(Property property, ArrayList<Player> players, String prompt) {
@@ -76,11 +76,13 @@ public class Auction {
 
     /**
      * Gets the Property being auctioned
+     *
      * @return the Property being auctioned
      */
     public Property getPROPERTY() {
         return PROPERTY;
     }
+
     /**
      * Gets whether or not this Auction is confirmed
      *

@@ -22,9 +22,10 @@ public class Trade {
 
     /**
      * Constructor for Trade. Validates according to the parameters outlined here
-     * @param sender the sender of the Trade
+     *
+     * @param sender   the sender of the Trade
      * @param receiver the receiver of the Trade
-     * @param prompt the prompt that should be shown to the receiver
+     * @param prompt   the prompt that should be shown to the receiver
      */
     public Trade(Player sender, Player receiver, String prompt) {
         if (sender != null && receiver != null) {
@@ -369,6 +370,7 @@ public class Trade {
 
     /**
      * Gets the Player who is the sender of this Trade
+     *
      * @return the sender of this Trade
      */
     public Player getSENDER() {
@@ -377,6 +379,7 @@ public class Trade {
 
     /**
      * Gets the Player who is the receiver of this Trade
+     *
      * @return the receiver of the Trade
      */
     public Player getRECEIVER() {

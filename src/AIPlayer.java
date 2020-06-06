@@ -65,7 +65,7 @@ public class AIPlayer implements Player {
      * @param numTurnsInJail   the number of turns the Player should be sent to jail for when they are sent there
      * @param prompts          the prompts that are used during the Game
      * @param gameBoard        the game board. This is read-only for this Class
-     * @param colorGroups the color groups on the game board. This is read-only for this Class
+     * @param colorGroups      the color groups on the game board. This is read-only for this Class
      * @throws IllegalArgumentException when the passed parameters are invalid
      */
     public AIPlayer(String name, int startingWallet, int startingPosition, int boardSize, int turnsJail,
@@ -122,9 +122,10 @@ public class AIPlayer implements Player {
 
     /**
      * Finds the given Space on the game board
+     *
      * @param spaces the Space to find
-     * @param space the game board to read
-     * @param <T> either Space or Property
+     * @param space  the game board to read
+     * @param <T>    either Space or Property
      * @return the index of the given Space
      * @throws IllegalArgumentException whne a null parameter is passed, or the given Space can not be found
      */
@@ -153,11 +154,12 @@ public class AIPlayer implements Player {
 
     /**
      * Gets the values the AI thinks each Property is worth on the game board
-     * @param spaces the game board to read
+     *
+     * @param spaces     the game board to read
      * @param thisPlayer this AIPlayer
      * @return the values the AI thinks each Property is worth
      */
-    private static int[] getValues (Space[] spaces, Player thisPlayer) {
+    private static int[] getValues(Space[] spaces, Player thisPlayer) {
         if (spaces != null && thisPlayer != null) {
             int[] result = new int[spaces.length];
             for (int i = 0; i < spaces.length; i++) {
@@ -169,12 +171,12 @@ public class AIPlayer implements Player {
                         } else if (owners.length == 1) {
                             if (owners[0].equals(thisPlayer)) { //If this Player is the only owner, we should inflate values
                                 if (percentOwnedByPlayer(spaces, owners[0], spaces[i].getPROPERTY().getCOLOR_GROUP()) < .5) { //If this is the case the AI owns less than half of the Properties in a group, so its still not a guaranteed monopoly
-                                    result[i] = (int)Math.round(spaces[i].getPROPERTY().getPRICE() * 1.25);
+                                    result[i] = (int) Math.round(spaces[i].getPROPERTY().getPRICE() * 1.25);
                                 } else if (percentOwnedByPlayer(spaces, owners[0], spaces[i].getPROPERTY().
-                                        getCOLOR_GROUP()) < 1.0){ //If this is the case, the Player owns more than half of the Properties in a color group, so this is a monopoly very much worth perusing
-                                    result[i] = (int)Math.round(spaces[i].getPROPERTY().getPRICE() * 1.5);
+                                        getCOLOR_GROUP()) < 1.0) { //If this is the case, the Player owns more than half of the Properties in a color group, so this is a monopoly very much worth perusing
+                                    result[i] = (int) Math.round(spaces[i].getPROPERTY().getPRICE() * 1.5);
                                 } else { //If this is the case, the Player owns all of the Properties in a color group
-                                    result[i] = (int)Math.round(spaces[i].getPROPERTY().getPRICE() * 2.0);
+                                    result[i] = (int) Math.round(spaces[i].getPROPERTY().getPRICE() * 2.0);
                                     result[i] += spaces[i].getPROPERTY().getNumHouses() * spaces[i].getPROPERTY().getBUILD_PRICE(); //We should add value for every house on the Property
                                 }
                             } else { //If someone else has the only Property, we should hold values constant to deny them a monopoly, but we shouldn't aggressively pursue
@@ -190,12 +192,12 @@ public class AIPlayer implements Player {
                             }
                             if (playerHasStake) {
                                 if (percentOwnedByPlayer(spaces, thisPlayer, spaces[i].getPROPERTY().getCOLOR_GROUP()) < .5) { //If the Player has less than half of the color group, odds are they aren't getting a monopoly
-                                    result[i] = (int)Math.round(spaces[i].getPROPERTY().getPRICE() * .75);
+                                    result[i] = (int) Math.round(spaces[i].getPROPERTY().getPRICE() * .75);
                                 } else { //If the Player has at least half of a color group, the odds that they get a monopoly are good
-                                    result[i] = (int)Math.round(spaces[i].getPROPERTY().getPRICE() * 1.25);
+                                    result[i] = (int) Math.round(spaces[i].getPROPERTY().getPRICE() * 1.25);
                                 }
                             } else { //If this Player doesn't have a stake in this color group and there's no chance of someone getting a monopoly, this Property isn't worth very much
-                                result[i] = (int)Math.round(spaces[i].getPROPERTY().getPRICE() * .25);
+                                result[i] = (int) Math.round(spaces[i].getPROPERTY().getPRICE() * .25);
                             }
                         }
                     } else {
@@ -213,13 +215,14 @@ public class AIPlayer implements Player {
 
     /**
      * Gets the value that the AI gives the passed Property
-     * @param spaces the game board to read
+     *
+     * @param spaces     the game board to read
      * @param thisPlayer this Player
-     * @param property the Property to look for
+     * @param property   the Property to look for
      * @return the value of the passed Property
      * @throws IllegalArgumentException when a null parameter is passed
      */
-    private static int getPropertyValue (Space[] spaces, Player thisPlayer, Property property) {
+    private static int getPropertyValue(Space[] spaces, Player thisPlayer, Property property) {
         if (spaces != null && thisPlayer != null && property != null) {
             return getValues(spaces, thisPlayer)[recognizeSpace(spaces, property)];
         } else {
@@ -229,7 +232,8 @@ public class AIPlayer implements Player {
 
     /**
      * Calculates the minimum wallet that the AI should have in order to be safe landing on any Space
-     * @param spaces the game board to read
+     *
+     * @param spaces     the game board to read
      * @param thisPlayer this AIPlayer
      * @return the mimimum safe wallet that the AI should have
      * @throws IllegalArgumentException when a null parameter is passed
@@ -255,23 +259,25 @@ public class AIPlayer implements Player {
 
     /**
      * Gets the percentage (as a double) of Properties that the Player owns out of a color group
-     * @param spaces the game board to read
-     * @param player the Player to look for
+     *
+     * @param spaces     the game board to read
+     * @param player     the Player to look for
      * @param colorGroup the color group to look for
      * @return the percentage of Properties that a Player owns out of a color group
      */
     private static double percentOwnedByPlayer(Space[] spaces, Player player, String colorGroup) {
-        return (double)Game.playerPropertiesInColorGroup(colorGroup, spaces, player).length /
+        return (double) Game.playerPropertiesInColorGroup(colorGroup, spaces, player).length /
                 Game.propertiesInColorGroup(colorGroup, spaces).length;
     }
 
     /**
      * Gets the Players who own Properties in the provided color group
-     * @param spaces the game board to read
+     *
+     * @param spaces     the game board to read
      * @param colorGroup the color group to look for
      * @return the Players who own Properties in the provided color group
      */
-    private static Player[] getColorGroupOwners (Space[] spaces, String colorGroup) {
+    private static Player[] getColorGroupOwners(Space[] spaces, String colorGroup) {
         ArrayList<Player> owners = new ArrayList<>();
         for (Property property : Game.propertiesInColorGroup(colorGroup, spaces)) {
             if (property.getOwner() != null && !owners.contains(property.getOwner())) {
@@ -283,8 +289,9 @@ public class AIPlayer implements Player {
 
     /**
      * Analyzes a Trade. Returns the amount that it is in favor of the AI for
-     * @param spaces the game board to read
-     * @param trade the Trade to analyze
+     *
+     * @param spaces     the game board to read
+     * @param trade      the Trade to analyze
      * @param thisPlayer this Player
      * @return the amount that this Trade is in favor of the AI
      */
@@ -331,6 +338,7 @@ public class AIPlayer implements Player {
 
     /**
      * Calculates the percentage of the board (as a double) that is unowned
+     *
      * @param spaces the game board to read
      * @return the percentage of the board that is unowned
      * @throws IllegalArgumentException when a null Spaces Array or Space is passed
@@ -348,7 +356,7 @@ public class AIPlayer implements Player {
                 }
             }
 
-            return (double)numOwned/spaces.length;
+            return (double) numOwned / spaces.length;
         } else {
             throw new IllegalArgumentException("A null Spaces Array was passed");
         }
@@ -398,7 +406,7 @@ public class AIPlayer implements Player {
      */
     @Override
     public <T> boolean promptBoolean(String description, T object) {
-        if(description != null) {
+        if (description != null) {
             int index = recognizePrompt(PROMPTS, description);
             if (index == 0 && object == null) {
                 return percentUnowned(GAME_BOARD) < .75; //If less than 75% of the board is unowned it's worth getting out
@@ -406,7 +414,7 @@ public class AIPlayer implements Player {
                 return percentUnowned(GAME_BOARD) < .75; //If less than 75% of the board is unowned it's worth getting out
             } else if (index == 3 && object.getClass() == Property.class) { //It's always worth participating in an auction
                 if (GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY() != null &&
-                        GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY().getOwner() == null ) { //This just validates the passed Space
+                        GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY().getOwner() == null) { //This just validates the passed Space
                     return true;
                 } else {
                     throw new IllegalArgumentException("An invalid Property was passed");
@@ -469,7 +477,7 @@ public class AIPlayer implements Player {
                     } else {
                         return none;
                     }
-                } else if (this.equals(((Trade) object).getRECEIVER())){ //If we're the receiver we shouldn't make the sender offer less
+                } else if (this.equals(((Trade) object).getRECEIVER())) { //If we're the receiver we shouldn't make the sender offer less
                     return none;
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
@@ -525,7 +533,7 @@ public class AIPlayer implements Player {
      *
      * @param description the description that should be shown to the Player
      * @param objects     the Array that the Player should pick from
-     * @param extra an additional Object that may be provided
+     * @param extra       an additional Object that may be provided
      * @return the index of the chosen Object
      */
     @Override
@@ -588,7 +596,7 @@ public class AIPlayer implements Player {
                             getPropertyValue(GAME_BOARD, this, properties[i]) >
                                     getPropertyValue(GAME_BOARD, this, properties[i]))) {
                         best = i;
-                } else if (wallet - properties[i].getBUILD_PRICE() >= maxSafe &&
+                    } else if (wallet - properties[i].getBUILD_PRICE() >= maxSafe &&
                             getPropertyValue(GAME_BOARD, this, properties[i]) ==
                                     getPropertyValue(GAME_BOARD, this, properties[best]) &&
                             properties[i].getBUILD_PRICE() < properties[best].getBUILD_PRICE()) {
