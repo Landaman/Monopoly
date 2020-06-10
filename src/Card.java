@@ -27,7 +27,7 @@ public class Card {
     private Player owner; //Stores the Player that currently holds this Card
 
     /**
-     * Constructor for Card. Validates the constants as outlined here
+     * Constructor for Card. Validates as outlined here
      *
      * @param type           the type of the Card (I.E. Community Chest or Chance). This shouldn't be null
      * @param description    the description of the Card. This shouldn't be null
@@ -43,12 +43,12 @@ public class Card {
      * @param perHouse       the amount that the Player should pay per house owned. Should be 0 for no charge
      * @param perHotel       the amount that the Player should pay per hotel owned. Should be 0 for no charge
      * @param getOutJail     whether or not this is a get out of jail free Card. Should be false if not
-     * @param own            the Player who holds this Card
+     * @param owner            the Player who holds this Card
      * @param boardSize      the board's size. Used for validation, is not stored
      * @throws IllegalArgumentException when an invalid parameter is passed
      */
     public Card(String type, String description, int money, boolean perPlayer, int movement, int space, String colorGroup,
-                double rentMultiplier, double rollMultiplier, int perHouse, int perHotel, boolean getOutJail, Player own,
+                double rentMultiplier, double rollMultiplier, int perHouse, int perHotel, boolean getOutJail, Player owner,
                 int boardSize) {
         if (type != null && description != null && !(perPlayer && money == 0) && space >= -1 && rentMultiplier >= 0 &&
                 rollMultiplier >= 0 && !((perHouse != 0 && perHotel == 0) || (perHouse == 0 && perHotel != 0)) &&
@@ -72,10 +72,26 @@ public class Card {
             PRICE_PER_HOUSE = perHouse;
             PRICE_PER_HOTEL = perHotel;
             IS_GET_OUT_JAIL = getOutJail;
-            owner = own;
+            this.owner = owner;
         } else {
-            throw new IllegalArgumentException("An invalid parameter was passed");
+            throw new IllegalArgumentException("An invalid parameter was passed" + description + " " +  money + " " + movement + " " + space + " " + colorGroup + " " + rentMultiplier + " " + rollMultiplier + " " + perHouse + " " + perHotel + " " + boardSize);
         }
+    }
+
+    /**
+     * Gets the type of this Card
+     * @return the type of this Card
+     */
+    public String getTYPE() {
+        return TYPE;
+    }
+
+    /**
+     * Gets the description of this Card
+     * @return the description of this Card
+     */
+    public String getDESCRIPTION() {
+        return DESCRIPTION;
     }
 
     /**

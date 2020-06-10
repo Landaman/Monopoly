@@ -1,3 +1,5 @@
+import java.awt.Color;
+
 /**
  * Represents a Player
  *
@@ -101,4 +103,16 @@ public interface Player {
      * @param index the index the Player should move to
      */
     void goToSpace(int index);
+
+    /**
+     * Gets the Players Color
+     * @return the Players Color
+     */
+    Color getCOLOR();
+
+    /**
+     * Gets the game board's size
+     * @return the game board's size
+     */
+    int getBOARD_SIZE();
 }

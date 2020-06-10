@@ -175,8 +175,8 @@ public class Defaults {
             false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false,
             false, false, true, false, false, false, false, false}};
 
-    private static final int[][] CARD_MOVEMENT_LOSSES = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, -3, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    private static final int[][] CARD_MOVEMENT_LOSSES = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0,
+            -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
     private static final int[][] CARD_SPACE_LOSSES = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 10, -1, -1, -1, -1, -1},
             {11, 39, -1, -1, -1, -1, -1, -1, -1, 24, -1, 10, -1, 5, -1, 0}};
@@ -186,10 +186,10 @@ public class Defaults {
             null, null, null, null, null, null, null}};
 
     private static final double[][] CARD_RENT_MULTIPLIERS = {{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0}, {1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0}};
+            1.0, 1.0, 1.0, 1.0, 1.0}, {1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0}};
 
     private static final double[][] CARD_ROLL_MULTIPLIERS = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+            0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
 
     private static final int[][] CARD_PER_HOUSE = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0}, {0, 0, 0, 50, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
@@ -199,7 +199,7 @@ public class Defaults {
 
     private static final boolean[][] CARD_IS_GET_OUT_JAIL = {{false, false, false, true, false, false, false, false,
             false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, true,
-            false, false, false, false, false, false, false, false}};
+            false, false, false, false, false, false, false, false, false}};
 
     private static final Player[][] CARD_OWNERS = {{null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null}, {null, null, null, null, null, null, null, null, null, null, null,
@@ -487,7 +487,7 @@ public class Defaults {
     /**
      * Gets the number of turns each Player has in jail
      *
-     * @return the number of turns each Player ahs in jail
+     * @return the number of turns each Player has in jail
      */
     public static int getPlayerTurnsInJail() {
         return PLAYER_TURNS_IN_JAIL;

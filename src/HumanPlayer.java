@@ -1,3 +1,5 @@
+import java.awt.*;
+
 /**
  * Represents a HumanPlayer
  *
@@ -7,9 +9,11 @@ public class HumanPlayer implements Player {
     //HumanPlayer constants
     private final String NAME; //Stores this Player's name. Used exclusively for UI purposes, has no internal uses. This shouldn't be null
     private final int BOARD_SIZE; //Stores the size of the board
-    private final int JAIL_POSITION; //The position of the jail on the board
-    private final int SALARY; //The amount of money the Player should get for passing go
-    private final int TURNS_IN_JAIL; //The number of turns the Player should be in jail for
+    private final int JAIL_POSITION; //Stores the position of the jail on the board
+    private final int SALARY; //Stores the amount of money the Player should get for passing go
+    private final int TURNS_IN_JAIL; //Stores the number of turns the Player should be in jail for
+    private final GameUI GAME_UI; //Stores the UI for the Game
+    private final Color COLOR; //Stores the Color of this Player
 
     //HumanPlayer fields
     private int wallet; //Stores the value of the Player's wallet
@@ -27,13 +31,15 @@ public class HumanPlayer implements Player {
      * @param jailPosition     the position of the jail on the board. This must be on the board
      * @param salary           the salary the Player should be awarded for each turn
      * @param numTurnsInJail   the number of turns the Player should be in jail for when they go
+     * @param gameUI           the UI for the Game
+     * @param color the Players color
      * @throws IllegalArgumentException when invalid parameters are passed
      */
     public HumanPlayer(String name, int startingWallet, int startingPosition, int boardSize, int turnsJail,
-                       int jailPosition, int salary, int numTurnsInJail) {
+                       int jailPosition, int salary, int numTurnsInJail, GameUI gameUI, Color color) {
         if (name != null && startingWallet >= 0 && startingPosition >= 0 && startingPosition < boardSize &&
                 turnsJail >= 0 && jailPosition >= 0 && jailPosition < boardSize && salary >= 0 && numTurnsInJail >= 0 &&
-                !(turnsJail > 0 && startingPosition != jailPosition)) {
+                !(turnsJail > 0 && startingPosition != jailPosition) && gameUI != null && color != null) {
             NAME = name;
             wallet = startingWallet;
             position = startingPosition;
@@ -42,6 +48,8 @@ public class HumanPlayer implements Player {
             JAIL_POSITION = jailPosition;
             SALARY = salary;
             TURNS_IN_JAIL = numTurnsInJail;
+            this.GAME_UI = gameUI;
+            COLOR = color;
         } else {
             throw new IllegalArgumentException("An invalid parameter was passed");
         }
@@ -87,7 +95,7 @@ public class HumanPlayer implements Player {
      */
     @Override
     public <T> boolean promptBoolean(String description, T object) {
-
+        return GAME_UI.booleanDialog(description, object);
     }
 
     /**
@@ -102,7 +110,7 @@ public class HumanPlayer implements Player {
      */
     @Override
     public <T> int promptInt(String description, int min, int max, int none, T object) {
-
+        return GAME_UI.intDialog(description, object);
     }
 
     /**
@@ -115,7 +123,7 @@ public class HumanPlayer implements Player {
      */
     @Override
     public <T, S> int promptArray(String description, T[] objects, S extra) {
-
+        return GAME_UI.arrayDialog(description, objects, extra);
     }
 
     /**
@@ -210,5 +218,25 @@ public class HumanPlayer implements Player {
         } else {
             throw new IllegalArgumentException("An invalid index was passed");
         }
+    }
+
+    /**
+     * Gets the Players Color
+     *
+     * @return the Players Color
+     */
+    @Override
+    public Color getCOLOR() {
+        return COLOR;
+    }
+
+    /**
+     * Gets the game board's size
+     *
+     * @return the game board's size
+     */
+    @Override
+    public int getBOARD_SIZE() {
+        return BOARD_SIZE;
     }
 }

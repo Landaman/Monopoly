@@ -1,9 +1,230 @@
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 /**
- * A collection of static methods that set up the Game. This could be integrated into Game, but is left out for neatness
+ * This Class manages Game setup. It contains many static methods that manage the Game Object initialization, along with
+ * a UI component
  *
  * @author irswr
  */
-public class GameCreator {
+public class GameCreator extends JPanel implements ActionListener, ListSelectionListener, DocumentListener {
+    //GameCreator fields
+    private MainUI mainUI; //Contains the MainUI Object that created this
+    private JList<String> list; //Contains the list of all of the Player's names
+    private DefaultListModel<String> listModel; //Contains the model that stores the Player's names
+    private JButton[] buttons; //Contains the buttons that manage Player creation
+    private JTextField textField; //Contains the text field that allows the user to input their Players name
+    private ArrayList<JComboBox<String>> comboBoxes; //Stores the combo boxes that allow the user to choose their Players type
+    private JPanel comboPanel; //Contains the combo boxes
+    private ArrayList<Color> colors; //Stores the Players Colors
+    private ArrayList<JButton> colorButtons; //Stores the buttons that allow the user to choose their Players Color
+    private JPanel colorPanel; //Contains the color buttons
+
+    public GameCreator(MainUI mainUI) {
+        if (mainUI != null) {
+            this.mainUI = mainUI;
+            setLayout(new BorderLayout());
+
+            JLabel label = new JLabel("Add your players");
+            add(label, BorderLayout.NORTH);
+
+            JPanel centerPanel = new JPanel();
+            listModel = new DefaultListModel<>();
+            list = new JList<>(listModel);
+            list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            list.setVisibleRowCount(-1);
+            list.addListSelectionListener(this);
+            centerPanel.add(list);
+
+            comboBoxes = new ArrayList<>();
+            comboPanel = new JPanel();
+            comboPanel.setLayout(new BoxLayout(comboPanel, BoxLayout.Y_AXIS));
+            centerPanel.add(comboPanel);
+
+            colors = new ArrayList<>();
+            colorButtons = new ArrayList<>();
+            colorPanel = new JPanel();
+            colorPanel.setLayout(new BoxLayout(colorPanel, BoxLayout.Y_AXIS));
+            centerPanel.add(colorPanel);
+
+            add(centerPanel, BorderLayout.CENTER);
+
+            JPanel controlPanel = new JPanel();
+
+            buttons = new JButton[3];
+            buttons[0] = new JButton("Add");
+            buttons[0].addActionListener(this);
+            buttons[0].setEnabled(false);
+            buttons[1] = new JButton("Remove");
+            buttons[1].addActionListener(this);
+            buttons[1].setEnabled(false);
+            buttons[2] = new JButton("Continue");
+            buttons[2].addActionListener(this);
+            buttons[2].setEnabled(false);
+
+            textField = new JTextField(20);
+            textField.setEditable(true);
+            textField.getDocument().addDocumentListener(this);
+
+            controlPanel.add(buttons[1]);
+            controlPanel.add(textField);
+            controlPanel.add(buttons[0]);
+            controlPanel.add(buttons[2]);
+            add(controlPanel, BorderLayout.SOUTH);
+        } else {
+            throw new IllegalArgumentException("A null parameter was passed");
+        }
+    }
+
+    /**
+     * Determines if the Players are in a valid state to finish setup
+     * @return if the Players are in a valid state to finish setup
+     */
+    private boolean canContinue() {
+        if (listModel.size() > 1) { //First we check if there are any Players
+            boolean hasHuman = false;
+            for (JComboBox<String> comboBox : comboBoxes) { //Then we make sure there is at least one human
+                if (comboBox.getSelectedIndex() == 0) {
+                    hasHuman = true;
+                    break;
+                }
+            }
+
+            if (hasHuman) {
+                for (int i = 0; i < colors.size(); i++) { //Then we make sure there are no identical colors or names
+                    for (int j = 0; j < colors.size(); j++) {
+                        if (i != j && colors.get(i).getRed() == colors.get(j).getRed() && colors.get(i).getBlue() ==
+                                colors.get(j).getBlue() && colors.get(i).getGreen() == colors.get(j).getGreen()) {
+                            return false;
+                        }
+                        if (i != j && listModel.get(i).equals(listModel.get(j))) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Invoked when an action occurs.
+     *
+     * @param e the event to be processed
+     */
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == buttons[0]) { //If this is the case, the user wants to add a new Player
+            listModel.add(listModel.getSize(), textField.getText());
+            textField.setText("");
+            buttons[0].setEnabled(false);
+            JComboBox<String> comboBox = new JComboBox<>(new String[] {"Human Player", "AI Player"});
+            comboBox.addActionListener(this);
+            comboBoxes.add(comboBox);
+            comboPanel.add(comboBox);
+            JButton button = new JButton();
+            button.setBackground(Color.white);
+            button.addActionListener(this);
+            colorButtons.add(button);
+            colorPanel.add(button);
+            colors.add(Color.white);
+            buttons[2].setEnabled(canContinue());
+        } else if (e.getSource() == buttons[1]) { //If this is the case, the user wants to remove an index
+            comboPanel.remove(comboBoxes.remove(list.getSelectedIndex()));
+            colors.remove(list.getSelectedIndex());
+            colorPanel.remove(colorButtons.remove(list.getSelectedIndex()));
+            listModel.remove(list.getSelectedIndex());
+            list.clearSelection();
+            buttons[1].setEnabled(false);
+            buttons[2].setEnabled(canContinue());
+        } else if (comboBoxes.contains(e.getSource())){ //If this is the case the user interacted with a combo box
+            buttons[2].setEnabled(canContinue());
+        } else if (colorButtons.contains(e.getSource())) {
+            Color pickedColor = JColorChooser.showDialog(this, "Pick your player's color: ",
+                    colors.get(colorButtons.indexOf(e.getSource())));
+            if (pickedColor != null) {
+                colors.set(colorButtons.indexOf(e.getSource()), pickedColor);
+                ((JButton) e.getSource()).setBackground(pickedColor);
+                buttons[2].setEnabled(canContinue());
+            }
+        } else if (e.getSource() == buttons[2]) { //This goes on an actually sets up the Game
+            String[] playerNames  = new String[listModel.getSize()];
+            for (int i = 0; i < playerNames.length; i++) {
+                playerNames[i] = listModel.get(i);
+
+            }
+            String[] playerTypes = new String[listModel.getSize()];
+            for (int i = 0; i < playerTypes.length; i++) {
+                playerTypes[i] = comboBoxes.get(i).getSelectedIndex() == 0? "Human Player" : "AI Player";
+            }
+            mainUI.setupGame(playerNames, playerTypes, colors.toArray(new Color[0]));
+        }
+    }
+
+    /**
+     * Called whenever the value of the selection changes.
+     *
+     * @param e the event that characterizes the change.
+     */
+    @Override
+    public void valueChanged(ListSelectionEvent e) { //If this is the case, the user interacted with the list
+        if (e.getSource() == list) {
+            buttons[1].setEnabled(list.getSelectedIndex() != -1);
+        }
+    }
+
+    /*
+    The following methods manage initialization of the Game Class. They are static
+     */
+
+    /**
+     * Makes a Game out of the default values
+     * @param playerNames the names of the Players
+     * @param playerTypes the types of the Players
+     * @param playerColors the Players colors
+     * @param gameUI the Game's UI
+     */
+    public static Game makeGame(String[] playerNames, String[] playerTypes, Color[] playerColors, GameUI gameUI) {
+        int[] playerWallets = new int[playerNames.length];
+        Arrays.fill(playerWallets, Defaults.getPlayerStartingWallet());
+        int[] playerPositions = new int[playerNames.length];
+        Arrays.fill(playerPositions, Defaults.getPlayerStartingPosition());
+        int[] playerSentences = new int[playerNames.length];
+        Arrays.fill(playerSentences, Defaults.getPlayerTurnsInJail());
+        int[] playerSalaries = new int[playerNames.length];
+        Arrays.fill(playerSalaries, Defaults.getPlayerSalary());
+        int[] playerJailTurns = new int[playerNames.length];
+        Arrays.fill(playerSalaries, Defaults.getPlayerJailTime());
+        return makeGame(Defaults.getSpaceNames(), Defaults.getSpaceMoneyLosses(), Defaults.getSpaceMovementLosses(),
+                Defaults.getSpaceSpaceLosses(), Defaults.getSpaceColorGroups(), Defaults.getSpaceRentMultipliers(),
+                Defaults.getSpaceRollMultipliers(), Defaults.getSpaceDeckUsed(), Defaults.getSpacePerHouse(),
+                Defaults.getSpacePerHotel(), Defaults.getSpaceHaveProperty(), Defaults.getPropertyPrices(),
+                Defaults.getPropertyMortgages(), Defaults.getPropertyMortgagePercent(), Defaults.getPropertyBuildPrices(),
+                Defaults.getPropertyColorGroups(), Defaults.getPropertyMaxHouses(), Defaults.getPropertyRents(),
+                Defaults.getPropertyStartingHouses(), Defaults.getPropertyAreDiceMultiplier(),
+                Defaults.getPropertyAreScaled(), Defaults.getPropertyAreMortgaged(), Defaults.getPropertyOwners(),
+                Defaults.getColorGroups(), Defaults.getJailPosition(), Defaults.getJailBail(), gameUI,
+                Defaults.getPROMPTS(), playerNames, playerTypes, playerWallets, playerPositions, playerSentences,
+                playerSalaries, playerJailTurns, playerColors, Defaults.getNumDice(), Defaults.getDiceSides(),
+                Defaults.getCardTypes(), Defaults.getCardDescriptions(), Defaults.getCardMoneyLosses(),
+                Defaults.getCardPerPlayer(), Defaults.getCardMovementLosses(), Defaults.getCardSpaceLosses(),
+                Defaults.getCardColorGroups(), Defaults.getCardRentMultipliers(), Defaults.getCardRollMultipliers(),
+                Defaults.getCardPerHouse(), Defaults.getCardPerHotel(), Defaults.getCardIsGetOutJail(),
+                Defaults.getCardOwners());
+    }
+
     public static Game makeGame(
             //Space parameters
             String[] spaceNames, int[] spaceMoneyLosses, int[] spaceMovementLosses, int[] spaceSpaceLosses,
@@ -15,10 +236,10 @@ public class GameCreator {
             int[] propertyStartingHouses, boolean[] propertyAreDiceMultipliers, boolean[] propertyAreScaled,
             boolean[] propertyAreMortgaged, Player[] propertyOwners,
             //Game parameters
-            String[] colorGroups, int jailPosition, int bailCost, String[] prompts,
+            String[] colorGroups, int jailPosition, int bailCost, GameUI gameUI, String[] prompts,
             //Player parameters
             String[] playerNames, String[] playerTypes, int[] playerWallets, int[] playerPositions,
-            int[] playerJailTurns, int[] playerSalaries, int[] numTurnsInJail,
+            int[] playerJailTurns, int[] playerSalaries, int[] numTurnsInJail, Color[] playerColors,
             //Dice parameters
             int numDice, int diceSides,
             //Deck parameters
@@ -35,13 +256,47 @@ public class GameCreator {
                 propertyBuildPrices, propertyColorGroups, propertyMaxHouses, propertyRents, propertyStartingHouses,
                 propertyAreDiceMultipliers, propertyAreScaled, propertyAreMortgaged, propertyOwners);
         Player[] players = setupPlayers(playerNames, playerTypes, playerWallets, playerPositions, spaces.length,
-                playerJailTurns, jailPosition, playerSalaries, numTurnsInJail, prompts, spaces, colorGroups);
+                playerJailTurns, jailPosition, playerSalaries, numTurnsInJail, prompts, spaces, colorGroups, gameUI,
+                playerColors);
         Dice[] dice = setupDice(numDice, diceSides);
         Deck[] deck = setupDecks(cardTypes, cardDescriptions, cardMoneyLosses, cardPerPlayer, cardMovementLosses,
                 cardSpaceLosses, cardColorGroup, cardRentMultiplier, cardRollMultiplier, cardPerHouses, cardPerHotels,
                 cardGetOutJail, cardOwners, spaces.length);
 
-        return new Game();
+        return new Game(spaces, colorGroups, jailPosition, bailCost, players, dice, deck, gameUI, prompts);
+    }
+
+    /**
+     * Gives notification that there was an insert into the document.  The
+     * range given by the DocumentEvent bounds the freshly inserted region.
+     *
+     * @param e the document event
+     */
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        buttons[0].setEnabled(textField.getText() != null && !textField.getText().equals(""));
+    }
+
+    /**
+     * Gives notification that a portion of the document has been
+     * removed.  The range is given in terms of what the view last
+     * saw (that is, before updating sticky positions).
+     *
+     * @param e the document event
+     */
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        buttons[0].setEnabled(textField.getText() != null && !textField.getText().equals(""));
+    }
+
+    /**
+     * Gives notification that an attribute or set of attributes changed.
+     *
+     * @param e the document event
+     */
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+
     }
 
     /*
@@ -211,20 +466,24 @@ public class GameCreator {
      * @param prompts        the prompts that are used during the Game. This is only used for the AIPlayer Class
      * @param gameBoard      the game board for use in the AIPlayer Class
      * @param colorGroups    the color groups used in the game board for the AIPLayer Class
+     * @param gameUI         the UI for the Game for the HumanPlayer Class
+     * @param colors the Colors of the Players
      * @return the created Players Array
      * @throws IllegalArgumentException when a null or mismatched Array is passed
      */
     private static Player[] setupPlayers(String[] names, String[] types, int[] wallets, int[] positions, int boardSize,
                                          int[] jailTurns, int jailPosition, int[] salaries, int[] numTurnsInJail,
-                                         String[] prompts, Space[] gameBoard, String[] colorGroups) {
+                                         String[] prompts, Space[] gameBoard, String[] colorGroups, GameUI gameUI,
+                                         Color[] colors) {
         if (names != null && types != null && wallets != null && positions != null && jailTurns != null && salaries != null &&
-                numTurnsInJail != null && names.length == types.length && types.length == wallets.length &&
+                numTurnsInJail != null && colors != null && names.length == types.length && types.length == wallets.length &&
                 wallets.length == positions.length && positions.length == jailTurns.length &&
-                jailTurns.length == salaries.length && salaries.length == numTurnsInJail.length) {
+                jailTurns.length == salaries.length && salaries.length == numTurnsInJail.length &&
+                numTurnsInJail.length == colors.length) {
             Player[] players = new Player[names.length];
             for (int i = 0; i < players.length; i++) {
                 players[i] = setupPlayer(names[i], types[i], wallets[i], positions[i], boardSize, jailTurns[i],
-                        jailPosition, salaries[i], numTurnsInJail[i], prompts, gameBoard, colorGroups);
+                        jailPosition, salaries[i], numTurnsInJail[i], prompts, gameBoard, colorGroups, gameUI, colors[i]);
             }
             return players;
         } else {
@@ -248,17 +507,20 @@ public class GameCreator {
      * @param prompts        the prompts that are used during the Game. This is only used for the AIPlayer Class
      * @param gameBoard      the game board for use in the AIPlayer Class
      * @param colorGroups    the color groups on the game board for use in the AIPlayer Class
+     * @param gameUI         the UI for the Game. Used in the HumanPlayer Class
+     * @param color the Color of this Player
      * @return the created Player Object
      * @throws IllegalArgumentException when type is not ai or human
      */
     private static Player setupPlayer(String name, String type, int wallet, int position, int boardSize, int jailTurns,
                                       int jailPosition, int salary, int numTurnsInJail, String[] prompts,
-                                      Space[] gameBoard, String[] colorGroups) {
-        if (type.equals("ai")) {
+                                      Space[] gameBoard, String[] colorGroups, GameUI gameUI, Color color) {
+        if (type.equals("AI Player")) {
             return new AIPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary, numTurnsInJail,
-                    prompts, gameBoard, colorGroups);
-        } else if (type.equals("human")) {
-            return new HumanPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary, numTurnsInJail);
+                    prompts, gameBoard, colorGroups, color);
+        } else if (type.equals("Human Player")) {
+            return new HumanPlayer(name, wallet, position, boardSize, jailTurns, jailPosition, salary, numTurnsInJail,
+                    gameUI, color);
         } else {
             throw new IllegalArgumentException("An invalid type value was passed");
         }

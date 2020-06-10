@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.util.ArrayList;
 
 /**
@@ -46,6 +47,7 @@ public class AIPlayer implements Player {
     private final String[] PROMPTS; //Stores the prompts that are used during the Game
     private final Space[] GAME_BOARD; //Stores the game board. THIS CLASS SHOULD NEVER DIRECTLY MODIFY IT, ONLY READ IT
     private final String[] COLOR_GROUPS; //Stores the color groups on the game board
+    private final Color COLOR; //Stores this Players color
 
     //AIPlayer fields
     private int wallet; //Stores the value of the Player's wallet
@@ -66,14 +68,16 @@ public class AIPlayer implements Player {
      * @param prompts          the prompts that are used during the Game
      * @param gameBoard        the game board. This is read-only for this Class
      * @param colorGroups      the color groups on the game board. This is read-only for this Class
+     * @param color this Player's color
      * @throws IllegalArgumentException when the passed parameters are invalid
      */
     public AIPlayer(String name, int startingWallet, int startingPosition, int boardSize, int turnsJail,
-                    int jailPosition, int salary, int numTurnsInJail, String[] prompts, Space[] gameBoard, String[] colorGroups) {
+                    int jailPosition, int salary, int numTurnsInJail, String[] prompts, Space[] gameBoard,
+                    String[] colorGroups, Color color) {
         if (name != null && startingWallet >= 0 && startingPosition >= 0 && startingPosition < boardSize &&
                 turnsJail >= 0 && jailPosition >= 0 && jailPosition < boardSize && salary >= 0 && numTurnsInJail >= 0 &&
                 !(turnsJail > 0 && startingPosition != jailPosition) && prompts != null && prompts.length == 27 && gameBoard != null &&
-                Game.validateGameBoard(gameBoard, colorGroups)) {
+                Game.validateGameBoard(gameBoard, colorGroups) && color != null) {
             NAME = name;
             wallet = startingWallet;
             position = startingPosition;
@@ -85,6 +89,7 @@ public class AIPlayer implements Player {
             PROMPTS = prompts;
             GAME_BOARD = gameBoard;
             COLOR_GROUPS = colorGroups;
+            COLOR = color;
         } else {
             throw new IllegalArgumentException("An invalid parameter was passed");
         }
@@ -106,7 +111,7 @@ public class AIPlayer implements Player {
         if (prompts != null && prompt != null) {
             for (int i = 0; i < prompts.length; i++) {
                 if (prompts[i] != null) {
-                    if (prompts[i].contains(prompt)) {
+                    if (prompts[i].equals(prompt)) {
                         return i;
                     }
                 } else {
@@ -130,10 +135,10 @@ public class AIPlayer implements Player {
      * @throws IllegalArgumentException whne a null parameter is passed, or the given Space can not be found
      */
     private static <T> int recognizeSpace(Space[] spaces, T space) {
-        if (spaces != null && (space.getClass() == Property.class || space.getClass() == Space.class)) {
+        if (spaces != null && (space instanceof Property || space instanceof Space)) {
             for (int i = 0; i < spaces.length; i++) {
                 if (spaces[i] != null) {
-                    if (space.getClass() == Space.class) {
+                    if (space instanceof Space) {
                         if (spaces[i].equals(space)) {
                             return i;
                         }
@@ -243,8 +248,8 @@ public class AIPlayer implements Player {
             int maxRent = 0;
             for (Space space : spaces) {
                 if (space != null) {
-                    if (space.getPROPERTY() != null && !space.getPROPERTY().getOwner().equals(thisPlayer) &&
-                            space.getPROPERTY().getRent() > maxRent) {
+                    if (space.getPROPERTY() != null && space.getPROPERTY().getOwner() != null &&
+                            !space.getPROPERTY().getOwner().equals(thisPlayer) && space.getPROPERTY().getRent() > maxRent) {
                         maxRent = space.getPROPERTY().getRent();
                     }
                 } else {
@@ -412,23 +417,23 @@ public class AIPlayer implements Player {
                 return percentUnowned(GAME_BOARD) < .75; //If less than 75% of the board is unowned it's worth getting out
             } else if (index == 2 && object == null) {
                 return percentUnowned(GAME_BOARD) < .75; //If less than 75% of the board is unowned it's worth getting out
-            } else if (index == 3 && object.getClass() == Property.class) { //It's always worth participating in an auction
+            } else if (index == 3 && object instanceof Property) { //It's always worth participating in an auction
                 if (GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY() != null &&
                         GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY().getOwner() == null) { //This just validates the passed Space
                     return true;
                 } else {
                     throw new IllegalArgumentException("An invalid Property was passed");
                 }
-            } else if (index == 4 && object.getClass() == Property.class) { //It's usually worth buying a Property
+            } else if (index == 4 && object instanceof Property) { //It's usually worth buying a Property
                 Property property = GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY(); //This just validates the passed Space
                 if (property != null && property.getOwner() == null) {
                     return wallet - property.getPRICE() > calcMinWallet(GAME_BOARD, this);
                 } else {
                     throw new IllegalArgumentException("An invalid Property was passed");
                 }
-            } else if (index == 22 && (object.getClass() == HumanPlayer.class || object.getClass() == AIPlayer.class)) {
+            } else if (index == 22 && (object instanceof Player)) {
                 return true;
-            } else if (index == 25 && object.getClass() == Property.class) {
+            } else if (index == 25 && object instanceof Property) {
                 Property property = GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY(); //This just validates the passed Space
                 if (property != null && property.getOwner() != null) {
                     return wallet - property.getUnMORTGAGE() > calcMinWallet(GAME_BOARD, this);
@@ -458,7 +463,7 @@ public class AIPlayer implements Player {
     public <T> int promptInt(String description, int min, int max, int none, T object) {
         if (description != null) {
             int index = recognizePrompt(PROMPTS, description);
-            if (index == 13 && object.getClass() == Trade.class) {
+            if (index == 13 && object instanceof Trade) {
                 if (this.equals(((Trade) object).getSENDER())) { //If we're the sender we shouldn't add more money
                     return none;
                 } else if (this.equals(((Trade) object).getRECEIVER())) {
@@ -470,7 +475,7 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 14 && object.getClass() == Trade.class) {
+            } else if (index == 14 && object instanceof Trade) {
                 if (this.equals(((Trade) object).getSENDER())) {
                     if (analyzeTrade(GAME_BOARD, (Trade) object, this) < 0) { //If we're the sender and analyzeTrade calculates that we're on the loosing end then we should offer less money
                         return Math.min(-analyzeTrade(GAME_BOARD, (Trade) object, this), max); //This ensures that we don't take away too much money
@@ -482,7 +487,7 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 19 && object.getClass() == Trade.class) {
+            } else if (index == 19 && object instanceof Trade) {
                 if (this.equals(((Trade) object).getRECEIVER())) { //If we're the receiver we shouldn't add more money
                     return none;
                 } else if (this.equals(((Trade) object).getSENDER())) {
@@ -494,7 +499,7 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 20 && object.getClass() == Trade.class) {
+            } else if (index == 20 && object instanceof Trade) {
                 if (this.equals(((Trade) object).getRECEIVER())) { //I
                     if (analyzeTrade(GAME_BOARD, (Trade) object, this) < 0) { //If we're the receiver and analyzeTrade calculates that we're on the loosing end we should offer less
                         return Math.min(-analyzeTrade(GAME_BOARD, (Trade) object, this), max); //This ensures that we don't take away too much money
@@ -506,13 +511,13 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 21 && object.getClass() == Trade.class) {
+            } else if (index == 21 && object instanceof Trade) {
                 if (analyzeTrade(GAME_BOARD, (Trade) object, this) >= 0) { //If analyzeTrade calculates the Trade as at least fair, then we'll accept it
                     return max;
                 } else { //If it's not fair we'll keep going
                     return none;
                 }
-            } else if (index == 26 && object.getClass() == Auction.class) {
+            } else if (index == 26 && object instanceof Auction) {
                 int safeMax = wallet - calcMinWallet(GAME_BOARD, this);
                 int value = getValues(GAME_BOARD, this)[recognizeSpace(GAME_BOARD, ((Auction) object).getPROPERTY())];
                 if (((Auction) object).getCurrentValue() < value) { //If this is the case, we're still willing to bid for the Property
@@ -540,7 +545,7 @@ public class AIPlayer implements Player {
     public <T, S> int promptArray(String description, T[] objects, S extra) {
         if (description != null && objects != null && objects.length > 0) {
             int index = recognizePrompt(PROMPTS, description);
-            if (index == 5 && objects[0].getClass() == Property.class && extra == null) { //We should never sell houses if we don't have to
+            if (index == 5 && objects[0] instanceof Property && extra == null) { //We should never sell houses if we don't have to
                 for (T object : objects) { //This just validates the passed Objects
                     Property property = GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY();
                     if (property != null && property.getOwner().equals(this) && property.getNumHouses() > 0) {
@@ -549,7 +554,7 @@ public class AIPlayer implements Player {
                         throw new IllegalArgumentException("An invalid Property was passed");
                     }
                 }
-            } else if (index == 6 && objects[0].getClass() == Property.class && extra == null) { //We should never mortgage if we don't have to
+            } else if (index == 6 && objects[0] instanceof Property && extra == null) { //We should never mortgage if we don't have to
                 for (T object : objects) { //This just validates the passed Objects
                     Property property = GAME_BOARD[recognizeSpace(GAME_BOARD, object)].getPROPERTY();
                     if (property != null && property.getOwner().equals(this) && property.canSell()) {
@@ -558,7 +563,7 @@ public class AIPlayer implements Player {
                         throw new IllegalArgumentException("An invalid Properties Array was passed");
                     }
                 }
-            } else if (index == 7 && objects[0].getClass() == Property.class && extra == null) { //If we can un-mortgage things without going bankrupt, we probably should
+            } else if (index == 7 && objects[0] instanceof Property && extra == null) { //If we can un-mortgage things without going bankrupt, we probably should
                 Property[] properties = new Property[objects.length];
                 for (int i = 0; i < objects.length; i++) { //Validates all of the passed Properties
                     properties[i] = GAME_BOARD[recognizeSpace(GAME_BOARD, objects[i])].getPROPERTY();
@@ -581,7 +586,7 @@ public class AIPlayer implements Player {
                     }
                 }
                 return best;
-            } else if (index == 8 && objects[0].getClass() == Property.class && extra == null) { //If we should build houses without going bankrupt, we should
+            } else if (index == 8 && objects[0] instanceof Property && extra == null) { //If we should build houses without going bankrupt, we should
                 Property[] properties = new Property[objects.length];
                 for (int i = 0; i < objects.length; i++) { //Validates all of the passed Properties
                     properties[i] = GAME_BOARD[recognizeSpace(GAME_BOARD, objects[i])].getPROPERTY();
@@ -604,7 +609,7 @@ public class AIPlayer implements Player {
                     }
                 }
                 return best;
-            } else if (index == 9 && objects[0].getClass() == Property.class && extra.getClass() == Trade.class) {
+            } else if (index == 9 && objects[0] instanceof Property && extra instanceof Trade) {
                 Property[] properties = new Property[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Properties
                     properties[i] = GAME_BOARD[recognizeSpace(GAME_BOARD, objects[i])].getPROPERTY();
@@ -636,7 +641,7 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 10 && objects[0].getClass() == Property.class && extra.getClass() == Trade.class) {
+            } else if (index == 10 && objects[0] instanceof Property && extra instanceof Trade) {
                 Property[] properties = new Property[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Properties
                     properties[i] = GAME_BOARD[recognizeSpace(GAME_BOARD, objects[i])].getPROPERTY();
@@ -661,10 +666,10 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 11 && objects[0].getClass() == Card.class && extra.getClass() == Trade.class) {
+            } else if (index == 11 && objects[0] instanceof Card && extra instanceof Trade) {
                 Card[] cards = new Card[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Cards
-                    if (objects[i].getClass() == Card.class) {
+                    if (objects[i] instanceof Card) {
                         cards[i] = (Card) objects[i];
                         if (cards[i].getOwner() == null) {
                             throw new IllegalArgumentException("An invalid Card was passed");
@@ -687,10 +692,10 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 12 && objects[0].getClass() == Card.class && extra.getClass() == Trade.class) {
+            } else if (index == 12 && objects[0] instanceof Card && extra instanceof Trade) {
                 Card[] cards = new Card[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Cards
-                    if (objects[i].getClass() == Card.class) {
+                    if (objects[i] instanceof Card) {
                         cards[i] = (Card) objects[i];
                         if (cards[i].getOwner() == null) {
                             throw new IllegalArgumentException("An invalid Card was passed");
@@ -713,7 +718,7 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 15 && objects[0].getClass() == Property.class && extra.getClass() == Trade.class) {
+            } else if (index == 15 && objects[0] instanceof Property && extra instanceof Trade) {
                 Property[] properties = new Property[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Properties
                     properties[i] = GAME_BOARD[recognizeSpace(GAME_BOARD, objects[i])].getPROPERTY();
@@ -745,7 +750,7 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 16 && objects[0].getClass() == Property.class && extra.getClass() == Trade.class) {
+            } else if (index == 16 && objects[0] instanceof Property && extra instanceof Trade) {
                 Property[] properties = new Property[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Properties
                     properties[i] = GAME_BOARD[recognizeSpace(GAME_BOARD, objects[i])].getPROPERTY();
@@ -770,10 +775,10 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 17 && objects[0].getClass() == Card.class && extra.getClass() == Trade.class) {
+            } else if (index == 17 && objects[0] instanceof Card && extra instanceof Trade) {
                 Card[] cards = new Card[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Cards
-                    if (objects[i].getClass() == Card.class) {
+                    if (objects[i] instanceof Card) {
                         cards[i] = (Card) objects[i];
                         if (cards[i].getOwner() == null) {
                             throw new IllegalArgumentException("An invalid Card was passed");
@@ -796,10 +801,10 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 18 && objects[0].getClass() == Card.class && extra.getClass() == Trade.class) {
+            } else if (index == 18 && objects[0] instanceof Card && extra instanceof Trade) {
                 Card[] cards = new Card[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Cards
-                    if (objects[i].getClass() == Card.class) {
+                    if (objects[i] instanceof Card) {
                         cards[i] = (Card) objects[i];
                         if (cards[i].getOwner() == null) {
                             throw new IllegalArgumentException("An invalid Card was passed");
@@ -822,14 +827,14 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 22 && (objects[0].getClass() == AIPlayer.class || objects[0].getClass() == HumanPlayer.class)
+            } else if (index == 22 && (objects[0] instanceof Player)
                     && extra == null) {
                 Player[] players = new Player[objects.length];
                 for (int i = 0; i < objects.length; i++) { //This validates the Players
-                    if (objects[i].getClass() == AIPlayer.class || objects[i].getClass() == HumanPlayer.class) {
+                    if (objects[i] instanceof Player) {
                         players[i] = (Player) objects[i];
                         if (players[i].equals(this)) {
-                            throw new IllegalArgumentException("An invalid prompt was passed");
+                            throw new IllegalArgumentException("AI was prompted to trade itself");
                         }
                     } else {
                         throw new IllegalArgumentException("An invalid prompt was passed");
@@ -848,7 +853,7 @@ public class AIPlayer implements Player {
                     }
                 }
                 return bestPlayer;
-            } else if (index == 23 && objects[0].getClass() == Property.class && extra == null) {
+            } else if (index == 23 && objects[0] instanceof Property && extra == null) {
                 if (wallet < 0) {
                     Property[] properties = new Property[objects.length];
                     for (int i = 0; i < objects.length; i++) { //This validates the Properties
@@ -869,7 +874,7 @@ public class AIPlayer implements Player {
                 } else {
                     throw new IllegalArgumentException("An invalid prompt was passed");
                 }
-            } else if (index == 24 && objects[0].getClass() == Property.class && extra == null) {
+            } else if (index == 24 && objects[0] instanceof Property && extra == null) {
                 if (wallet < 0) {
                     Property[] properties = new Property[objects.length];
                     for (int i = 0; i < objects.length; i++) { //This validates the Properties
@@ -991,5 +996,25 @@ public class AIPlayer implements Player {
         } else {
             throw new IllegalArgumentException("An invalid index was passed");
         }
+    }
+
+    /**
+     * Gets the Players Color
+     *
+     * @return the Players Color
+     */
+    @Override
+    public Color getCOLOR() {
+        return COLOR;
+    }
+
+    /**
+     * Gets the game board's size
+     *
+     * @return the game board's size
+     */
+    @Override
+    public int getBOARD_SIZE() {
+        return BOARD_SIZE;
     }
 }

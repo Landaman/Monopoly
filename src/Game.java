@@ -52,6 +52,7 @@ public class Game {
 
     //Game fields
     private int currentPlayer; //Stores the index of the current Player in PLAYERS
+    private boolean shouldGoToNextPlayer; //Stores whether the next turn should move to the next Player
 
     /*
     The following methods will manage all aspects of game initialization
@@ -107,6 +108,7 @@ public class Game {
             updatePropertiesRent(GAME_BOARD);
             currentPlayer = 0;
             PROMPTS = prompts;
+            shouldGoToNextPlayer = false;
         } else {
             throw new IllegalArgumentException("A null or empty Array was passed");
         }
@@ -115,6 +117,38 @@ public class Game {
     /*
     The following methods are static helper methods
      */
+
+    /**
+     * Gets all of the Properties on a board
+     * @param gameBoard the game board to read
+     * @return the Properties
+     * @throws IllegalArgumentException when a null Spaces Array is passed
+     */
+    public static Property[] getProperties(Space[] gameBoard) {
+        if (gameBoard != null) {
+            ArrayList<Property> properties = new ArrayList<>();
+            for (Space space : gameBoard) {
+                if (space.getPROPERTY() != null) {
+                    properties.add(space.getPROPERTY());
+                }
+            }
+
+            return properties.toArray(new Property[0]);
+        } else {
+            throw new IllegalArgumentException("A null Spaces Array was passed");
+        }
+    }
+
+    /**
+     * Gets all of the unowned Properties on a board
+     * @param gameBoard the game board to read
+     * @return the unowned Properties on a game board
+     */
+    public static Property[] getAvailableProperties(Space[] gameBoard) {
+        ArrayList<Property> properties = new ArrayList<>(Arrays.asList(getProperties(gameBoard)));
+        properties.removeIf(property -> (property.getOwner() != null));
+        return properties.toArray(new Property[0]);
+    }
 
     /**
      * Validates the passed gameBoard and colorGroups
@@ -272,7 +306,7 @@ public class Game {
         ArrayList<Property> result = new ArrayList<>();
         if (player != null) {
             for (Property property : propertiesInColorGroup(colorGroup, spaces)) {
-                if (property.getOwner().equals(player)) {
+                if (property.getOwner() != null && property.getOwner().equals(player)) {
                     result.add(property);
                 }
             }
@@ -294,7 +328,8 @@ public class Game {
             if (player != null) {
                 for (Space space : spaces) {
                     if (space != null) {
-                        if (space.getPROPERTY() != null && space.getPROPERTY().getOwner().equals(player)) {
+                        if (space.getPROPERTY() != null && space.getPROPERTY().getOwner() != null &&
+                                space.getPROPERTY().getOwner().equals(player)) {
                             result.add(space.getPROPERTY());
                         }
                     } else {
@@ -514,7 +549,7 @@ public class Game {
      * @return the closest index that belongs to a given color group
      * @throws IllegalArgumentException when an invalid parameter is passed
      */
-    public static int getNearestInColorGroup(String colorGroup, Space[] spaces, int startingIndex) {
+    private static int getNearestInColorGroup(String colorGroup, Space[] spaces, int startingIndex) {
         if (colorGroup != null && spaces != null && startingIndex >= 0 && startingIndex < spaces.length) {
             int closestIndex = -1;
             for (int i = startingIndex; i < spaces.length; i++) { //First we'll go forwards
@@ -559,7 +594,7 @@ public class Game {
      * @return an Array of the Cards owned by the Player in all of the Decks
      * @throws IllegalArgumentException when a null parameter is passed
      */
-    private static Card[] getOwnedCards(Player player, Deck[] decks) {
+    public static Card[] getOwnedCards(Player player, Deck[] decks) {
         ArrayList<Card> result = new ArrayList<>();
         if (player != null && decks != null) {
             for (Deck deck : decks) {
@@ -573,8 +608,9 @@ public class Game {
                             throw new IllegalArgumentException("A null Card was passed");
                         }
                     }
+                } else {
+                    throw new IllegalArgumentException("A null Deck was passed");
                 }
-                throw new IllegalArgumentException("A null Deck was passed");
             }
             return result.toArray(new Card[0]);
         } else {
@@ -704,7 +740,9 @@ public class Game {
      */
     public Trade promptTrade(String description, Player sender, Player[] players) {
         if (description != null && players != null && players.length > 0) {
-            int index = sender.promptArray(description, players, null);
+            ArrayList<Player> playersWithoutThis = new ArrayList<>(Arrays.asList(players));
+            playersWithoutThis.removeIf(player -> player.equals(sender));
+            int index = sender.promptArray(description, playersWithoutThis.toArray(new Player[0]), null);
             if (index >= 0 && index < players.length) {
                 Player receiver = players[index];
                 if (sender.promptBoolean(description, sender)) {
@@ -879,13 +917,9 @@ public class Game {
                         }
                         numRounds++;
                     }
-                    return null;
-                } else {
-                    return null;
                 }
-            } else {
-                return null;
             }
+            return null;
         } else {
             throw new IllegalArgumentException("A null or empty parameter was passed");
         }
@@ -1052,6 +1086,7 @@ public class Game {
     private void handleSpace(Space space, Player player, int[] rolls) {
         if (space != null && player != null) {
             if (space.getPROPERTY() == null) { //If the Space doesn't have a Property, we should look for its penalty
+                GAME_UI.displayMessage("You landed on " + space);
                 if (space.getMONEY_PENALTY() != 0) { //If this is the case then we should pay the Player that amount
                     doMandatoryTransaction(player, space.getMONEY_PENALTY(), null);
                 } else if (space.getMOVEMENT_PENALTY() != 0) { //If this is the case, the Player should move that amount
@@ -1121,6 +1156,7 @@ public class Game {
      */
     private void handleCard(Card card, Player player, int[] rolls) {
         if (card != null && player != null) {
+            GAME_UI.displayCard(card, "You Drew This Card");
             if (card.getMONEY() != 0) { //If this is the case, the Player should gain this amount
                 if (!card.isPER_PLAYER()) {
                     doMandatoryTransaction(player, card.getMONEY(), null);
@@ -1194,6 +1230,7 @@ public class Game {
      */
     private void handleProperty(Property property, Player player, int[] rolls) {
         if (property != null && player != null) {
+            GAME_UI.displayProperty(property, "You landed on this property");
             if (property.getOwner() == null) { //If this is the case, the Player can buy the Property
                 if (player.canAfford(property.getPRICE()) && player.promptBoolean(PROMPTS[4], property)) { //If this is the case, the Player will buy the Property
                     player.updateWallet(-property.getPRICE());
@@ -1368,12 +1405,13 @@ public class Game {
     /**
      * Updates who the currentPlayer is. Is cyclical, meaning once currentPlayer would go out of bounds for PLAYERS it goes to 0
      */
-    public void nextPlayer() {
+    private void nextPlayer() {
         if (currentPlayer + 1 < PLAYERS.size()) {
             currentPlayer++;
         } else {
             currentPlayer = 0;
         }
+        GAME_UI.displayMessage("It is " + getCurrentPlayer() + "'s turn");
     }
 
     /**
@@ -1383,12 +1421,22 @@ public class Game {
      */
     public void doTurn() {
         updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
-        if (currentPlayer >= 0 && currentPlayer < PLAYERS.size() && PLAYERS.get(currentPlayer).getWallet() >= 0) {
+        GAME_UI.update();
+        if (currentPlayer >= 0 && currentPlayer < PLAYERS.size() && PLAYERS.get(currentPlayer).getWallet() >= 0 &&
+                PLAYERS.size() > 1) {
+            if (shouldGoToNextPlayer) {
+                nextPlayer();
+            }
             Player player = PLAYERS.get(currentPlayer);
             boolean playerStartsInJail = player.getTurnInJail() > 0;
             int startingPosition = player.getPosition();
             int startingPlayerNumber = PLAYERS.size();
             int[] rolls = getRoll(DICE);
+            StringBuilder message = new StringBuilder("You rolled");
+            for (int roll : rolls) {
+                message.append(" a ").append(roll).append(", and");
+            }
+            GAME_UI.displayMessage(message.toString().substring(0, message.length() - 5));
             if (playerStartsInJail) {
                 doJail(rolls, player);
             } else {
@@ -1399,6 +1447,7 @@ public class Game {
                 startingPosition = player.getPosition();
                 handleSpace(GAME_BOARD[player.getPosition()], player, rolls);
                 updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
+                GAME_UI.update();
             }
 
             if (startingPlayerNumber != PLAYERS.size()) { //If this is the case the Player has gone bankrupt, meaning they shouldn't be allowed to do anything else
@@ -1426,11 +1475,42 @@ public class Game {
                 trade = promptTrade(PROMPTS[22], player, PLAYERS.toArray(new Player[0]));
             } while (trade != null);
 
-            if (playerStartsInJail || !rolledDoubles(rolls)) { //If the player started in jail or didn't roll doubles the next Player will be the next in line
-                nextPlayer();
-            }
+            //If the player started in jail or didn't roll doubles the next Player will be the next in line
+            shouldGoToNextPlayer = playerStartsInJail || !rolledDoubles(rolls);
         } else {
             throw new IllegalStateException("Game is in an illegal state");
         }
+    }
+
+    /**
+     * Gets the game board
+     * @return the game board
+     */
+    public Space[] getGAME_BOARD() {
+        return GAME_BOARD;
+    }
+
+    /**
+     * Gets the Decks
+     * @return the Decks
+     */
+    public Deck[] getDECKS() {
+        return DECKS;
+    }
+
+    /**
+     * Gets this Game's Players
+     * @return this Game's Players
+     */
+    public Player[] getPLAYERS() {
+        return PLAYERS.toArray(new Player[0]);
+    }
+
+    /**
+     * Returns the current Player
+     * @return the current Player
+     */
+    public Player getCurrentPlayer() {
+        return PLAYERS.get(currentPlayer);
     }
 }

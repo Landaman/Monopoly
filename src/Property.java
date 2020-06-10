@@ -45,7 +45,7 @@ public class Property {
     public Property(int price, int mortgage, double mortgagePercent, int buildPrice, String colorGroup,
                     int maxHouses, int[] rents, int startingHouses, boolean isDiceMultiplier,
                     boolean isScaled, boolean mortgaged, Player propertyOwner, String name) {
-        if (mortgage < price && mortgage > 0 && buildPrice > 0 &&
+        if (mortgage < price && mortgage > 0 && buildPrice >= 0 &&
                 colorGroup != null && rents != null && rents.length > 0 &&
                 startingHouses >= 0 && startingHouses <= maxHouses &&
                 !(isScaled && maxHouses != 0) && !(startingHouses > 0 && propertyOwner == null) &&
@@ -139,6 +139,14 @@ public class Property {
     }
 
     /**
+     * Returns the rents for this Property
+     * @return the rents for this Property
+     */
+    public int[] getRENTS() {
+        return RENTS;
+    }
+
+    /**
      * Gets whether or not this Property uses a dice multiplier
      *
      * @return whether or not this Property uses a dice multiplier
@@ -217,7 +225,7 @@ public class Property {
      * @return whether or not this Property can be sold
      */
     public boolean canSell() {
-        return numHouses == 0 && !isMortgaged && owner != null;
+        return numHouses == 0 && !isMortgaged && validateProperty();
     }
 
     /**
