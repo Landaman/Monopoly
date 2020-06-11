@@ -21,7 +21,7 @@ public class GameUI extends JPanel implements ActionListener {
     private final JLabel CURRENT_PLAYER; //A button that simply displays the current player
     private final JLabel WALLET; //A button that simply displays the Players Wallet
 
-    public GameUI (String[] playerNames, String[] playerTypes, Color[] playerColors, MainUI mainUI) {
+    public GameUI(String[] playerNames, String[] playerTypes, Color[] playerColors, MainUI mainUI) {
         if (mainUI != null) {
             GAME = GameCreator.makeGame(playerNames, playerTypes, playerColors, this);
             GAME_GRAPHICS = new GameGraphics(GAME);
@@ -66,7 +66,6 @@ public class GameUI extends JPanel implements ActionListener {
     }
 
 
-
     /**
      * Invoked when an action occurs.
      *
@@ -77,21 +76,21 @@ public class GameUI extends JPanel implements ActionListener {
         if (e.getSource() == BUTTONS[0]) {
             GAME.doTurn();
         } else if (e.getSource() == BUTTONS[1]) {
-            JDialog propertySelector = new PropertySelectionDialog(Game.getProperties(GAME.getGAME_BOARD()));
+            new PropertySelectionDialog(Game.getProperties(GAME.getGAME_BOARD()));
         } else if (e.getSource() == BUTTONS[2]) {
-            JDialog propertySelector = new PropertySelectionDialog(Game.getAvailableProperties(GAME.getGAME_BOARD()));
+            new PropertySelectionDialog(Game.getAvailableProperties(GAME.getGAME_BOARD()));
         } else if (e.getSource() == BUTTONS[3]) {
-            JDialog propertySelector = new PropertySelectionDialog(Game.playerProperties(GAME.getGAME_BOARD(),
+            new PropertySelectionDialog(Game.playerProperties(GAME.getGAME_BOARD(),
                     GAME.getCurrentPlayer()));
         } else if (e.getSource() == BUTTONS[4]) {
-            JDialog cardSelector = new CardSelectionDialog(Game.getOwnedCards(GAME.getCurrentPlayer(),
+            new CardSelectionDialog(Game.getOwnedCards(GAME.getCurrentPlayer(),
                     GAME.getDECKS()));
-        } else if(e.getSource() == BUTTONS[5]) {
-            JDialog playerSelector = new PlayerSelectionDialog(GAME.getPLAYERS());
+        } else if (e.getSource() == BUTTONS[5]) {
+            new PlayerSelectionDialog(GAME.getPLAYERS());
         } else if (e.getSource() == BUTTONS[6]) {
-            int n = JOptionPane.showConfirmDialog(this, "Are you sure you want to quit?",
-                    "Confirmation", JOptionPane.YES_NO_OPTION);
-            if (n == 0) {
+            int n = JOptionPane.showConfirmDialog(MAIN_UI, "Are you sure you want to quit?",
+                    "Are you sure you want to quit?", JOptionPane.YES_NO_OPTION);
+            if (n == JOptionPane.YES_OPTION) {
                 System.exit(0);
             }
         }
@@ -99,19 +98,29 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Prompts the user for a boolean
+     *
      * @param description the description that should be shown to the user
-     * @param object a potential object that may be displayed as part of the message
+     * @param object      a potential object that may be displayed as part of the message
      * @return the users decision
      * @throws IllegalArgumentException when a null description is passed
      */
     public <T> boolean booleanDialog(String description, T object) {
         if (description != null) {
-            if (object != null && object.getClass() == Property.class) {
+            if (object instanceof Property) {
                 JPanel panel = new JPanel();
                 panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
                 panel.add(new JLabel(description));
                 JPanel viewer = new PropertyViewer((Property) object);
-                viewer.setPreferredSize(new Dimension(300, 400));
+                viewer.setPreferredSize(new Dimension(400, 800));
+                panel.add(viewer);
+                return JOptionPane.showConfirmDialog(MAIN_UI, panel, description, JOptionPane.YES_NO_OPTION,
+                        JOptionPane.PLAIN_MESSAGE) == JOptionPane.YES_OPTION;
+            } else if (object instanceof Player) {
+                JPanel panel = new JPanel();
+                panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+                panel.add(new JLabel(description));
+                JPanel viewer = new PlayerViewer((Player) object);
+                viewer.setPreferredSize(new Dimension(200, 100));
                 panel.add(viewer);
                 return JOptionPane.showConfirmDialog(MAIN_UI, panel, description, JOptionPane.YES_NO_OPTION,
                         JOptionPane.PLAIN_MESSAGE) == JOptionPane.YES_OPTION;
@@ -126,8 +135,9 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Prompts the user for an integer
+     *
      * @param description the description that should be shown to the user
-     * @param object the Array the user is being prompted with
+     * @param object      the Array the user is being prompted with
      * @return the integer the user choose
      * @throws IllegalArgumentException when a null description is passed
      */
@@ -136,13 +146,13 @@ public class GameUI extends JPanel implements ActionListener {
             if (object != null && object.getClass() == Trade.class) {
                 JPanel panel = new JPanel();
                 panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-                panel.add(new JFrame(description));
+                panel.add(new JLabel(description));
                 JPanel viewer = new TradeViewer((Trade) object);
                 viewer.setPreferredSize(new Dimension(400, 200));
                 panel.add(viewer);
                 int result;
                 String o;
-                while (true){
+                while (true) {
                     o = JOptionPane.showInputDialog(MAIN_UI, panel, description);
 
                     try {
@@ -156,13 +166,13 @@ public class GameUI extends JPanel implements ActionListener {
             } else if (object != null && object.getClass() == Auction.class) {
                 JPanel panel = new JPanel();
                 panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-                panel.add(new JFrame(description));
+                panel.add(new JLabel(description));
                 JPanel viewer = new PropertyViewer(((Auction) object).getPROPERTY());
-                viewer.setPreferredSize(new Dimension(300, 400));
+                viewer.setPreferredSize(new Dimension(400, 800));
                 panel.add(viewer);
                 int result;
                 String o;
-                while (true){
+                while (true) {
                     o = JOptionPane.showInputDialog(MAIN_UI, panel, description);
 
                     try {
@@ -195,9 +205,10 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Prompts the user to pick an object out of an Array (or none)
+     *
      * @param description the description that should be shown to the user
-     * @param objects the objects the user an pick from
-     * @param extra an extra that can be shown to the user
+     * @param objects     the objects the user an pick from
+     * @param extra       an extra that can be shown to the user
      * @return the index of the picked Object
      * @throws IllegalArgumentException when a null description or Array is passed
      */
@@ -227,7 +238,7 @@ public class GameUI extends JPanel implements ActionListener {
                             throw new IllegalArgumentException("A mismatched Array was passed");
                         }
                     }
-                    JDialog dialog = new PropertySelectionDialog(properties);
+                    new PropertySelectionDialog(properties);
                 });
 
             } else if (objects[0] instanceof Card) {
@@ -240,7 +251,7 @@ public class GameUI extends JPanel implements ActionListener {
                             throw new IllegalArgumentException("A mismatched Array was passed");
                         }
                     }
-                    JDialog dialog = new CardSelectionDialog(cards);
+                    new CardSelectionDialog(cards);
                 });
             } else if (objects[0] instanceof Player) {
                 button.addActionListener(e -> {
@@ -252,7 +263,7 @@ public class GameUI extends JPanel implements ActionListener {
                             throw new IllegalArgumentException("A mismatched Array was passed");
                         }
                     }
-                    JDialog dialog = new PlayerSelectionDialog(players);
+                    new PlayerSelectionDialog(players);
                 });
             } else {
                 throw new IllegalArgumentException("An invalid Array type was passed");
@@ -261,6 +272,7 @@ public class GameUI extends JPanel implements ActionListener {
 
             Object o = JOptionPane.showInputDialog(MAIN_UI, panel, description, JOptionPane.PLAIN_MESSAGE, null,
                     options, options[options.length - 1]);
+            temp.removeIf(o1 -> (o1 instanceof String));
             if (temp.contains(o)) {
                 return temp.indexOf(o);
             } else {
@@ -271,7 +283,6 @@ public class GameUI extends JPanel implements ActionListener {
             throw new IllegalArgumentException("A null parameter was passed");
         }
     }
-
 
 
     /**
@@ -285,6 +296,7 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Shows a message to the user
+     *
      * @param message the message that should be displayed
      * @throws IllegalArgumentException when a null message is passed
      */
@@ -298,13 +310,14 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Shows a Card to the user
-     * @param card the card that should be displayed
+     *
+     * @param card        the card that should be displayed
      * @param description the description that should be shown to the user, if any
      * @throws IllegalArgumentException when a null Card is passed
      */
     public void displayCard(Card card, String description) {
         if (card != null) {
-            JDialog dialog = new JDialog(MAIN_UI, card.toString(),true);
+            JDialog dialog = new JDialog(MAIN_UI, card.toString(), true);
             JPanel panel = new JPanel(new BorderLayout());
             if (description != null) {
                 panel.add(new JLabel(description), BorderLayout.NORTH);
@@ -323,13 +336,14 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Shows a Property to the user
-     * @param property the Property that should be displayed
+     *
+     * @param property    the Property that should be displayed
      * @param description the description that should be shown to the user, if any
      * @throws IllegalArgumentException when a null Property is passed
      */
     public void displayProperty(Property property, String description) {
         if (property != null) {
-            JDialog dialog = new JDialog(MAIN_UI, property.toString(),true);
+            JDialog dialog = new JDialog(MAIN_UI, property.toString(), true);
             JPanel panel = new JPanel(new BorderLayout());
             if (description != null) {
                 panel.add(new JLabel(description), BorderLayout.NORTH);
@@ -339,7 +353,7 @@ public class GameUI extends JPanel implements ActionListener {
             button.addActionListener(e -> dialog.setVisible(false));
             panel.add(button, BorderLayout.SOUTH);
             dialog.setContentPane(panel);
-            dialog.setBounds(100, 100, 400, 600);
+            dialog.setBounds(100, 100, 400, 800);
             dialog.setVisible(true);
         } else {
             throw new IllegalArgumentException("A null Property was passed");
@@ -348,13 +362,14 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Shows a Player to the user
-     * @param player the Property that should be displayed
+     *
+     * @param player      the Property that should be displayed
      * @param description the description that should be shown to the user, if any
      * @throws IllegalArgumentException when a null Property is passed
      */
     public void displayPlayer(Player player, String description) {
         if (player != null) {
-            JDialog dialog = new JDialog(MAIN_UI, player.toString(),true);
+            JDialog dialog = new JDialog(MAIN_UI, player.toString(), true);
             JPanel panel = new JPanel(new BorderLayout());
             if (description != null) {
                 panel.add(new JLabel(description), BorderLayout.NORTH);
@@ -364,7 +379,7 @@ public class GameUI extends JPanel implements ActionListener {
             button.addActionListener(e -> dialog.setVisible(false));
             panel.add(button, BorderLayout.SOUTH);
             dialog.setContentPane(panel);
-            dialog.setBounds(100, 100, 100, 100);
+            dialog.setBounds(100, 100, 200, 100);
             dialog.setVisible(true);
         } else {
             throw new IllegalArgumentException("A null Property was passed");
@@ -373,6 +388,7 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Allows the user to view a Player
+     *
      * @author irswr
      */
     private class PlayerSelectionDialog extends JDialog implements ActionListener, ListSelectionListener {
@@ -382,6 +398,7 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Creates a dialog that allows the user to view a Player
+         *
          * @param players the Players the user can view
          * @throws IllegalArgumentException when a null Players Array is passed
          */
@@ -447,6 +464,7 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Creates a dialog that prompts the user to view a Property
+     *
      * @author irswr
      */
     private class PropertySelectionDialog extends JDialog implements ActionListener, ListSelectionListener {
@@ -456,6 +474,7 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Creates a prompt that allows the user to view a Property
+         *
          * @param properties the Properties that the user can view
          * @throws IllegalArgumentException when a null Property is passed
          */
@@ -487,7 +506,7 @@ public class GameUI extends JPanel implements ActionListener {
                 panel.add(controls, BorderLayout.SOUTH);
 
                 setContentPane(panel);
-                setBounds(100, 100, 100, 500);
+                setBounds(100, 100, 100, 700);
                 setVisible(true);
             } else {
                 throw new IllegalArgumentException("An invalid Properties Array was passed");
@@ -522,9 +541,10 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Represents a JPanel that displays the card for a Property
+     *
      * @author irswr
      */
-    private class PropertyViewer extends JPanel{
+    private class PropertyViewer extends JPanel {
         private final Property PROPERTY; //Stores the Property being displayed
 
         public PropertyViewer(Property property) {
@@ -537,6 +557,7 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Paints the Property
+         *
          * @param g the Graphics Object to paint with
          */
         @Override
@@ -548,24 +569,25 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Draws a Property at the given coordinates
-         * @param g the Graphics Object to draw with
-         * @param property the Property to draw
+         *
+         * @param g          the Graphics Object to draw with
+         * @param property   the Property to draw
          * @param numInGroup the number of houses in this Properties color group
-         * @param x the x-coordinate to start drawing at
-         * @param y the y-coordinate to start drawing at
-         * @param width the width to draw the Property
-         * @param height the height to draw the Property
+         * @param x          the x-coordinate to start drawing at
+         * @param y          the y-coordinate to start drawing at
+         * @param width      the width to draw the Property
+         * @param height     the height to draw the Property
          * @throws IllegalArgumentException when a null or invalid parameter is passed
          */
         private void drawProperty(Graphics g, Property property, int numInGroup, int x, int y, int width, int height) {
             if (g != null && property != null && x >= 0 && y >= 0 && width > 0 && height > 0) {
-                String owner = "Owner: " + (property.getOwner() != null? property.getOwner().toString() : "Unowned");
+                String owner = "Owner: " + (property.getOwner() != null ? property.getOwner().toString() : "Unowned");
                 String numHouses = property.getNumHouses() + " houses";
                 g.setFont(new Font("Kabel Heavy", Font.PLAIN, 20));
-                g.setFont(g.getFont().deriveFont((float)(width/2)/ g.getFontMetrics().stringWidth(owner) * 20));
-                g.drawString(owner, x + width/2 - g.getFontMetrics().stringWidth(owner)/2,
+                g.setFont(g.getFont().deriveFont((float) (width / 2) / g.getFontMetrics().stringWidth(owner) * 20));
+                g.drawString(owner, x + width / 2 - g.getFontMetrics().stringWidth(owner) / 2,
                         y + g.getFontMetrics().getHeight());
-                g.drawString(numHouses, x + width/2 - g.getFontMetrics().stringWidth(numHouses)/2, y +
+                g.drawString(numHouses, x + width / 2 - g.getFontMetrics().stringWidth(numHouses) / 2, y +
                         g.getFontMetrics().getHeight() * 2);
                 drawPropertyCard(g, property, numInGroup, x, y + g.getFontMetrics().getHeight() * 3, width, height -
                         g.getFontMetrics().getHeight() * 3);
@@ -576,94 +598,96 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Draws a Property deed
-         * @param g the Graphics Object to draw with
-         * @param property the Property to draw
+         *
+         * @param g          the Graphics Object to draw with
+         * @param property   the Property to draw
          * @param numInGroup the number of Properties in this properties color group
-         * @param x the x-coordinate to start at
-         * @param y they-coordinate to start at
-         * @param width the width to draw
-         * @param height the height to draw
+         * @param x          the x-coordinate to start at
+         * @param y          they-coordinate to start at
+         * @param width      the width to draw
+         * @param height     the height to draw
          */
         private void drawPropertyCard(Graphics g, Property property, int numInGroup, double x, double y, double width,
-                                             double height) {
+                                      double height) {
             if (g != null && property != null && numInGroup > 0 && x >= 0 && y >= 0 && width > 0 && height > 0) {
-                double lineWidth = width/50;
+                double lineWidth = width / 50;
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setColor(Color.BLACK);
                 g2.setStroke(new BasicStroke(Math.round(lineWidth)));
                 g2.draw(new Rectangle.Double(x, y, width, height));
-                double leftAlign = x + width/10;
-                double rightAlign = x + width - width/10;
+                double leftAlign = x + width / 10;
+                double rightAlign = x + width - width / 10;
                 Color color = GameGraphics.recognizeColorGroup(property.getCOLOR_GROUP());
                 if (color != null) { //This colors the box that draws the Properties name, if necessary
                     g2.setStroke(new BasicStroke());
                     g2.setColor(color);
-                    g2.fill(new Rectangle2D.Double(leftAlign, y + width/10, width - width/5, height/10));
+                    g2.fill(new Rectangle2D.Double(leftAlign, y + width / 10, width - width / 5, height / 10));
                     g2.setColor(Color.BLACK);
                     g2.setStroke(new BasicStroke(Math.round(lineWidth)));
                 }
                 //This code draws the box that shows the Properties name
-                g2.draw(new Rectangle.Double(leftAlign, y + width/10, width - width/5, height/10));
+                g2.draw(new Rectangle.Double(leftAlign, y + width / 10, width - width / 5, height / 10));
                 String propertyName = property.toString();
                 g2.setFont(new Font("Kabel Heavy", Font.BOLD, 20));
-                g2.setFont(g2.getFont().deriveFont((float)(width - width/5)/g2.getFontMetrics().stringWidth("   " +propertyName + "   ") * 20));
-                g2.drawString(propertyName, (int)Math.round(leftAlign + (width - width/5)/2 - g2.getFontMetrics().stringWidth(propertyName)/2.0),
-                        (int)Math.round(y + width/10 + g2.getFontMetrics().getHeight()));
+                g2.setFont(g2.getFont().deriveFont((float) (width - width / 5) / g2.getFontMetrics().stringWidth("   " + propertyName + "   ") * 20));
+                g2.drawString(propertyName, (int) Math.round(leftAlign + (width - width / 5) / 2 - g2.getFontMetrics().stringWidth(propertyName) / 2.0),
+                        (int) Math.round(y + width / 10 + g2.getFontMetrics().getHeight()));
 
                 String cost = "Price: $" + property.getPRICE();
                 g2.setFont(new Font("Kabel Heavy", Font.PLAIN, 20));
-                g2.setFont(g2.getFont().deriveFont((float)(width/3)/g2.getFontMetrics().stringWidth("                   ") * 20));
-                g2.drawString(cost, (int)Math.round(x + width/2 - g2.getFontMetrics().stringWidth(cost)/2.0),
-                        (int)Math.round(y + width/5 + height/10));
+                g2.setFont(g2.getFont().deriveFont((float) (width / 3) / g2.getFontMetrics().stringWidth("                   ") * 20));
+                g2.drawString(cost, (int) Math.round(x + width / 2 - g2.getFontMetrics().stringWidth(cost) / 2.0),
+                        (int) Math.round(y + width / 5 + height / 10));
                 g2.setStroke(new BasicStroke(Math.round(lineWidth)));
-                g2.draw(new Line2D.Double(leftAlign, y + width/10 + height/10 + g2.getFontMetrics().getHeight() * 1.35,
-                        rightAlign, y + width/10 + height/10 + g2.getFontMetrics().getHeight() * 1.35));
+                g2.draw(new Line2D.Double(leftAlign, y + width / 10 + height / 10 + g2.getFontMetrics().getHeight() * 1.35,
+                        rightAlign, y + width / 10 + height / 10 + g2.getFontMetrics().getHeight() * 1.35));
                 //This code draws the left side of the rents
                 if (property.IS_SCALED()) { //Draws out the text that says "If ___ owned:"
                     for (int i = 1; i <= numInGroup; i++) {
                         String description = "If " + i + " owned:";
-                        g2.drawString(description, (float)leftAlign, (float)(y + width/10 + height/10 +
+                        g2.drawString(description, (float) leftAlign, (float) (y + width / 10 + height / 10 +
                                 g2.getFontMetrics().getHeight() * (i + 1)));
                     }
                 } else { //Draws out the text that says "With ___ houses:"
-                    for (int i = 0; i <= property.getMAX_HOUSES(); i++) {
+                    for (int i = -1; i <= property.getMAX_HOUSES(); i++) {
                         String description;
-                        if (i == 0) {
+                        if (i == -1) {
                             description = "Rent:";
-                        } else if (i == 1) {
+                        } else if (i == 0) {
                             description = "With Monopoly:";
                         } else if (i == property.getMAX_HOUSES()) {
                             description = "With Hotel:";
                         } else {
                             description = "With " + i + " Houses:";
                         }
-                        g2.drawString(description, (float)leftAlign, (float)
-                                (y + width/10 + height/10 + g2.getFontMetrics().getHeight() * (i + 2)));
+                        g2.drawString(description, (float) leftAlign, (float)
+                                (y + width / 10 + height / 10 + g2.getFontMetrics().getHeight() * (i + 3)));
                     }
+                    String houseCost = "Houses cost $" + property.getBUILD_PRICE();
+                    g2.drawString(houseCost, (float) (x + width / 2 - g2.getFontMetrics().stringWidth(houseCost) / 2),
+                            (float) (y + width / 10 + height / 10 + g2.getFontMetrics().getHeight() *
+                                    (property.getRENTS().length + 2)));
                 }
 
                 //This code draws out the right side of the rent
                 if (property.IS_DICE_MULTIPLIER()) { //This writes out the "___ * dice roll"
                     for (int i = 0; i < property.getRENTS().length; i++) {
                         String description = property.getRENTS()[i] + " * dice roll";
-                        g2.drawString(description, (float)rightAlign - g2.getFontMetrics().stringWidth(description),
-                                (float)(y + width/10 + height/10 + g2.getFontMetrics().getHeight() * (i + 2)));
+                        g2.drawString(description, (float) rightAlign - g2.getFontMetrics().stringWidth(description),
+                                (float) (y + width / 10 + height / 10 + g2.getFontMetrics().getHeight() * (i + 2)));
                     }
                 } else { //This writes out the "$___"
                     for (int i = 0; i < property.getRENTS().length; i++) {
                         String description = "$" + property.getRENTS()[i];
-                        g2.drawString(description, (float)rightAlign - g2.getFontMetrics().stringWidth(description),
-                                (float)(y + width/10 + + height/10 + g2.getFontMetrics().getHeight() * (i + 2)));
+                        g2.drawString(description, (float) rightAlign - g2.getFontMetrics().stringWidth(description),
+                                (float) (y + width / 10 + +height / 10 + g2.getFontMetrics().getHeight() * (i + 2)));
                     }
-                    String description = "Houses cost $" + property.getBUILD_PRICE();
-                    g2.drawString(description, (float)(x + width/2 - g2.getFontMetrics().stringWidth(description)/2),
-                            (float)(y + width/10 + height/10 + g2.getFontMetrics().getHeight() * (property.getRENTS().length + 2)));
                 }
                 g2.draw(new Line2D.Double(leftAlign, y + height - g2.getFontMetrics().getHeight() * 2, rightAlign,
                         y + height - g2.getFontMetrics().getHeight() * 2));
                 String mortgage = "Mortgage value $" + property.getMORTGAGE();
-                g2.drawString(mortgage, (float)(x + width/2 - g2.getFontMetrics().stringWidth(mortgage)/2),
-                        (float)(y + height - g2.getFontMetrics().getHeight()));
+                g2.drawString(mortgage, (float) (x + width / 2 - g2.getFontMetrics().stringWidth(mortgage) / 2),
+                        (float) (y + height - g2.getFontMetrics().getHeight()));
 
             } else {
                 throw new IllegalArgumentException("An invalid parameter was passed");
@@ -738,6 +762,7 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Allows the user to view a Card
+     *
      * @author irswr
      */
     private class CardViewer extends JPanel {
@@ -745,6 +770,7 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Sets up a JPanel to view a Card
+         *
          * @param card the Card to be displayed
          */
         public CardViewer(Card card) {
@@ -757,6 +783,7 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Draws the Card for this Class
+         *
          * @param g the Graphics Object to draw with
          */
         @Override
@@ -767,21 +794,22 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Draws a Card
-         * @param g the Graphics Object to draw with
-         * @param card the Card to draw
-         * @param x the x-coordinate to start at
-         * @param y the y-coordinate to start at
-         * @param width the width to draw
+         *
+         * @param g      the Graphics Object to draw with
+         * @param card   the Card to draw
+         * @param x      the x-coordinate to start at
+         * @param y      the y-coordinate to start at
+         * @param width  the width to draw
          * @param height the height to draw
          * @throws IllegalArgumentException when an invalid parameter is passed
          */
         public void drawCard(Graphics g, Card card, int x, int y, int width, int height) {
-            if (g != null && card != null && x >= 0 && y >= 0 && width > 0 && height >0) {
-                String owner = "Owner: " + (card.getOwner() != null? card.getOwner() : "Unowned");
+            if (g != null && card != null && x >= 0 && y >= 0 && width > 0 && height > 0) {
+                String owner = "Owner: " + (card.getOwner() != null ? card.getOwner() : "Unowned");
                 g.setColor(Color.BLACK);
                 g.setFont(new Font("Kabel Heavy", Font.BOLD, 20));
-                g.setFont(g.getFont().deriveFont((float)(width/2)/g.getFontMetrics().stringWidth(owner) * 20));
-                g.drawString(owner, x + width/2 - g.getFontMetrics().stringWidth(owner)/2, y +
+                g.setFont(g.getFont().deriveFont((float) (width / 2) / g.getFontMetrics().stringWidth(owner) * 20));
+                g.drawString(owner, x + width / 2 - g.getFontMetrics().stringWidth(owner) / 2, y +
                         g.getFontMetrics().getHeight());
 
                 g.setColor(Color.ORANGE);
@@ -818,6 +846,7 @@ public class GameUI extends JPanel implements ActionListener {
 
     /**
      * Allows the user to view a Player
+     *
      * @author irswr
      */
     private class PlayerViewer extends JPanel implements ActionListener {
@@ -826,6 +855,7 @@ public class GameUI extends JPanel implements ActionListener {
 
         /**
          * Creates the Player Viewer
+         *
          * @param player the Player to view
          * @throws IllegalArgumentException when a null Player is passed
          */
@@ -855,9 +885,9 @@ public class GameUI extends JPanel implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == BUTTONS[0]) {
-                JDialog propertySelector = new PropertySelectionDialog(Game.playerProperties(GAME.getGAME_BOARD(), PLAYER));
-            } else if(e.getSource() == BUTTONS[1]) {
-                JDialog cardSelector = new CardSelectionDialog(Game.getOwnedCards(PLAYER, GAME.getDECKS()));
+                new PropertySelectionDialog(Game.playerProperties(GAME.getGAME_BOARD(), PLAYER));
+            } else if (e.getSource() == BUTTONS[1]) {
+                new CardSelectionDialog(Game.getOwnedCards(PLAYER, GAME.getDECKS()));
             }
         }
     }
@@ -870,12 +900,12 @@ public class GameUI extends JPanel implements ActionListener {
         private final JList<String> RECEIVER_PROPERTIES; //Stores the Properties the receiver is offering
         private final JList<String> RECEIVER_CARDS; //Stores the Cards the receiver is offering
 
-        public TradeViewer (Trade trade) {
+        public TradeViewer(Trade trade) {
             super(new BorderLayout());
             if (trade != null) {
                 JPanel tradePanel = new JPanel();
 
-                JPanel senderPanel  = new JPanel();
+                JPanel senderPanel = new JPanel();
                 senderPanel.setLayout(new BoxLayout(senderPanel, BoxLayout.Y_AXIS));
                 senderPanel.add(new JLabel(trade.getSENDER().toString()));
 
@@ -961,7 +991,7 @@ public class GameUI extends JPanel implements ActionListener {
             if (e.getSource() == BUTTONS[0]) {
                 if (SENDER_PROPERTIES.getSelectedIndex() >= 0) {
                     displayProperty(TRADE.getSenderProperties().get(SENDER_PROPERTIES.getSelectedIndex()), null);
-                } else if (RECEIVER_PROPERTIES.getSelectedIndex() >= 0 ) {
+                } else if (RECEIVER_PROPERTIES.getSelectedIndex() >= 0) {
                     displayProperty(TRADE.getReceiverProperties().get(RECEIVER_PROPERTIES.getSelectedIndex()), null);
                 }
             } else if (e.getSource() == BUTTONS[1]) {

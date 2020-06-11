@@ -3,21 +3,10 @@ import java.awt.*;
 
 /**
  * Represents the menu graphics for monopoly
+ *
  * @author irswr
  */
 public class MenuGraphics extends JPanel {
-    /**
-     * Paints the background for the Menu screen
-     *
-     * @param g the Graphics Object to paint with
-     */
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        drawBackground(g);
-        drawMonopolyLogo(g, getWidth() * 3 / 4, getHeight() / 4, getWidth() / 2 - getWidth() * 3 / 4 / 2, getHeight() / 6);
-    }
-
     /**
      * Draws a cloud (three ovals) at the given coordinates
      *
@@ -98,6 +87,18 @@ public class MenuGraphics extends JPanel {
         } else {
             throw new IllegalArgumentException("An invalid parameter was passed");
         }
+    }
+
+    /**
+     * Paints the background for the Menu screen
+     *
+     * @param g the Graphics Object to paint with
+     */
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        drawBackground(g);
+        drawMonopolyLogo(g, getWidth() * 3 / 4, getHeight() / 4, getWidth() / 2 - getWidth() * 3 / 4 / 2, getHeight() / 6);
     }
 
     /**

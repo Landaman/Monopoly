@@ -120,6 +120,7 @@ public class Game {
 
     /**
      * Gets all of the Properties on a board
+     *
      * @param gameBoard the game board to read
      * @return the Properties
      * @throws IllegalArgumentException when a null Spaces Array is passed
@@ -141,6 +142,7 @@ public class Game {
 
     /**
      * Gets all of the unowned Properties on a board
+     *
      * @param gameBoard the game board to read
      * @return the unowned Properties on a game board
      */
@@ -744,8 +746,8 @@ public class Game {
             playersWithoutThis.removeIf(player -> player.equals(sender));
             int index = sender.promptArray(description, playersWithoutThis.toArray(new Player[0]), null);
             if (index >= 0 && index < players.length) {
-                Player receiver = players[index];
-                if (sender.promptBoolean(description, sender)) {
+                Player receiver = playersWithoutThis.get(index);
+                if (receiver.promptBoolean(description, sender)) {
                     Trade trade = new Trade(sender, receiver, description);
                     Player currentOfferer = sender;
                     int numRounds = 0; //This just makes it so that we don't have a Trade that never ends
@@ -809,15 +811,15 @@ public class Game {
                         int senderOfferableCash = sender.getWallet() - trade.getSenderMoney();
                         if (senderOfferableCash > 0) {
                             int cash = currentOfferer.promptInt(PROMPTS[13], 0, senderOfferableCash, -1, trade);
-                            if (cash >= 0 && cash <= senderOfferableCash) {
-                                trade.addSenderMoney(senderOfferableCash);
+                            if (cash > 0 && cash <= senderOfferableCash) {
+                                trade.addSenderMoney(cash);
                             }
                         }
 
                         int senderOfferedCash = trade.getSenderMoney();
                         if (senderOfferedCash > 0) {
                             int cash = currentOfferer.promptInt(PROMPTS[14], 0, senderOfferedCash, -1, trade);
-                            if (cash >= 0 && cash <= senderOfferableCash) {
+                            if (cash > 0 && cash <= senderOfferableCash) {
                                 trade.removeSenderMoney(cash);
                             }
                         }
@@ -881,15 +883,15 @@ public class Game {
                         int receiverOfferableCash = receiver.getWallet() - trade.getReceiverMoney();
                         if (receiverOfferableCash > 0) {
                             int cash = currentOfferer.promptInt(PROMPTS[19], 0, receiverOfferableCash, -1, trade);
-                            if (cash >= 0 && cash <= receiverOfferableCash) {
-                                trade.addReceiverMoney(receiverOfferableCash);
+                            if (cash > 0 && cash <= receiverOfferableCash) {
+                                trade.addReceiverMoney(cash);
                             }
                         }
 
                         int receiverOfferedCash = trade.getReceiverMoney();
                         if (receiverOfferedCash > 0) {
                             int cash = currentOfferer.promptInt(PROMPTS[20], 0, receiverOfferedCash, -1, trade);
-                            if (cash >= 0 && cash <= receiverOfferableCash) {
+                            if (cash > 0 && cash <= receiverOfferableCash) {
                                 trade.removeReceiverMoney(cash);
                             }
                         }
@@ -1133,7 +1135,7 @@ public class Game {
                     }
                 } else if (space.getDECK_USED() != -1) { //If this is the case, the Player should draw from that deck
                     if (space.getDECK_USED() >= 0 && space.getDECK_USED() < DECKS.length) {
-                        handleCard(DECKS[space.getDECK_USED()].getCard(), player, rolls);
+                        handleCard(DECKS[space.getDECK_USED()].getCard(), player, rolls, DECKS[space.getDECK_USED()]);
                     } else {
                         throw new IllegalArgumentException("An invalid Space was passed");
                     }
@@ -1152,10 +1154,11 @@ public class Game {
      * @param card   the Card the Player drew
      * @param player the Player that drew the Card
      * @param rolls  the rolls the Player did
+     * @param deck   the Deck the card was drawn from
      * @throws IllegalArgumentException when a null parameter is passed
      */
-    private void handleCard(Card card, Player player, int[] rolls) {
-        if (card != null && player != null) {
+    private void handleCard(Card card, Player player, int[] rolls, Deck deck) {
+        if (card != null && player != null && deck != null) {
             GAME_UI.displayCard(card, "You Drew This Card");
             if (card.getMONEY() != 0) { //If this is the case, the Player should gain this amount
                 if (!card.isPER_PLAYER()) {
@@ -1215,6 +1218,7 @@ public class Game {
                 }
             } else if (card.IS_GET_OUT_JAIL()) { //If this is the case, the Player should get this Card
                 card.setOwner(player);
+                deck.addCardToOwnedCards(card);
             }
         } else {
             throw new IllegalArgumentException("A null parameter was passed");
@@ -1444,6 +1448,7 @@ public class Game {
             }
 
             while (startingPlayerNumber == PLAYERS.size() && startingPosition != player.getPosition()) { //Theoretically the Player could go around the board forever depending on the moves, so until they don't move after the Space is processed we'll keep processing the Spaces
+                GAME_UI.update();
                 startingPosition = player.getPosition();
                 handleSpace(GAME_BOARD[player.getPosition()], player, rolls);
                 updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
@@ -1484,6 +1489,7 @@ public class Game {
 
     /**
      * Gets the game board
+     *
      * @return the game board
      */
     public Space[] getGAME_BOARD() {
@@ -1492,6 +1498,7 @@ public class Game {
 
     /**
      * Gets the Decks
+     *
      * @return the Decks
      */
     public Deck[] getDECKS() {
@@ -1500,6 +1507,7 @@ public class Game {
 
     /**
      * Gets this Game's Players
+     *
      * @return this Game's Players
      */
     public Player[] getPLAYERS() {
@@ -1508,6 +1516,7 @@ public class Game {
 
     /**
      * Returns the current Player
+     *
      * @return the current Player
      */
     public Player getCurrentPlayer() {

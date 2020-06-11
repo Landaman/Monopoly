@@ -1,4 +1,4 @@
-import java.awt.Color;
+import java.awt.*;
 
 /**
  * Represents a Player
@@ -106,12 +106,14 @@ public interface Player {
 
     /**
      * Gets the Players Color
+     *
      * @return the Players Color
      */
     Color getCOLOR();
 
     /**
      * Gets the game board's size
+     *
      * @return the game board's size
      */
     int getBOARD_SIZE();

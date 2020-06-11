@@ -71,33 +71,6 @@ public class Property {
     }
 
     /**
-     * Copy constructor for Property
-     *
-     * @param property the Property to copy
-     * @throws IllegalArgumentException when a null Property is passed
-     */
-    public Property(Property property) {
-        if (property != null) {
-            PRICE = property.PRICE;
-            MORTGAGE = property.MORTGAGE;
-            MORTGAGE_PERCENT = property.MORTGAGE_PERCENT;
-            BUILD_PRICE = property.BUILD_PRICE;
-            COLOR_GROUP = property.COLOR_GROUP;
-            MAX_HOUSES = property.MAX_HOUSES;
-            RENTS = property.RENTS;
-            IS_DICE_MULTIPLIER = property.IS_DICE_MULTIPLIER;
-            IS_SCALED = property.IS_SCALED;
-            NAME = property.NAME;
-            rent = property.rent;
-            numHouses = property.numHouses;
-            owner = property.owner;
-            isMortgaged = property.isMortgaged;
-        } else {
-            throw new IllegalArgumentException("A null Property was passed");
-        }
-    }
-
-    /**
      * Gets the price of this Property
      *
      * @return the price of this Property
@@ -140,6 +113,7 @@ public class Property {
 
     /**
      * Returns the rents for this Property
+     *
      * @return the rents for this Property
      */
     public int[] getRENTS() {

@@ -109,21 +109,22 @@ public class Defaults {
 
     private static final int JAIL_BAIL = 50;
 
-    private static final String[] PROMPTS = {"Would you like to use a get out of jail free card",
-            "Would you like to trade for a get out of jail free card", "Would you like to pay your bail",
-            "Would you like to participate in an auction for ", "Would you like to buy ",
-            "Would you like to sell houses or hotels on ", "Would you like to mortgage ",
-            "Would you like to un-mortgage ", "Would you like to build on ", "Should the sender offer any properties ",
-            "Should the sender remove any properties ", "Should the sender offer any cards ",
-            "Should the sender remove any cards", "Should the sender offer more money ",
-            "Should the sender offer less money ", "Should the receiver offer any more properties ",
-            "Should the receiver offer any less properties ", "Should the receiver offer any more cards ",
-            "Should the receiver offer any less cards ", "Should the receiver offer any more money ",
-            "Should receiver offer any less money ", "Is this trade fair ", "Would you like to trade ",
-            "You are bankrupt! You can sell houses on any of these properties ",
-            "You are bankrupt! You can mortgage any of these properties ",
-            "Would you like to pay to un-mortgage this property that you are inheriting ",
-            "How much do you want to bid for "};
+    private static final String[] PROMPTS = {"Would you like to use a get out of jail free card?",
+            "Would you like to trade for a get out of jail free card?", "Would you like to pay your bail?",
+            "Would you like to participate in an auction for this property?", "Would you like to buy this property?",
+            "Would you like to sell houses or hotels on any properties?", "Would you like to mortgage any properties?",
+            "Would you like to un-mortgage any properties?", "Would you like to build on any properties?",
+            "Should the sender offer any properties?",
+            "Should the sender remove any properties?", "Should the sender offer any cards?",
+            "Should the sender remove any cards?", "Should the sender offer more money?",
+            "Should the sender offer less money?", "Should the receiver offer any more properties?",
+            "Should the receiver offer any less properties?", "Should the receiver offer any more cards?",
+            "Should the receiver offer any less cards?", "Should the receiver offer any more money?",
+            "Should receiver offer any less money?", "Is this trade fair?", "Would you like to trade?",
+            "You are bankrupt! You can sell houses on any of these properties?",
+            "You are bankrupt! You can mortgage any of these properties?",
+            "Would you like to pay to un-mortgage this property that you are inheriting?",
+            "How much do you want to bid for this property?"};
 
     private static final int NUM_DICE = 2;
 
@@ -175,7 +176,7 @@ public class Defaults {
             false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false,
             false, false, true, false, false, false, false, false}};
 
-    private static final int[][] CARD_MOVEMENT_LOSSES = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0,
+    private static final int[][] CARD_MOVEMENT_LOSSES = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0,
             -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
     private static final int[][] CARD_SPACE_LOSSES = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 10, -1, -1, -1, -1, -1},

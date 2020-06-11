@@ -46,7 +46,6 @@ public class AIPlayer implements Player {
      */
     private final String[] PROMPTS; //Stores the prompts that are used during the Game
     private final Space[] GAME_BOARD; //Stores the game board. THIS CLASS SHOULD NEVER DIRECTLY MODIFY IT, ONLY READ IT
-    private final String[] COLOR_GROUPS; //Stores the color groups on the game board
     private final Color COLOR; //Stores this Players color
 
     //AIPlayer fields
@@ -68,7 +67,7 @@ public class AIPlayer implements Player {
      * @param prompts          the prompts that are used during the Game
      * @param gameBoard        the game board. This is read-only for this Class
      * @param colorGroups      the color groups on the game board. This is read-only for this Class
-     * @param color this Player's color
+     * @param color            this Player's color
      * @throws IllegalArgumentException when the passed parameters are invalid
      */
     public AIPlayer(String name, int startingWallet, int startingPosition, int boardSize, int turnsJail,
@@ -88,7 +87,7 @@ public class AIPlayer implements Player {
             TURNS_IN_JAIL = numTurnsInJail;
             PROMPTS = prompts;
             GAME_BOARD = gameBoard;
-            COLOR_GROUPS = colorGroups;
+            //Stores the color groups on the game board
             COLOR = color;
         } else {
             throw new IllegalArgumentException("An invalid parameter was passed");
@@ -170,7 +169,7 @@ public class AIPlayer implements Player {
             for (int i = 0; i < spaces.length; i++) {
                 if (spaces[i] != null) {
                     if (spaces[i].getPROPERTY() != null) {
-                        Player[] owners = getColorGroupOwners(spaces, spaces[i].getCOLOR_GROUP());
+                        Player[] owners = getColorGroupOwners(spaces, spaces[i].getPROPERTY().getCOLOR_GROUP());
                         if (owners.length == 0) { //If no-one owns Property in this color group, the value should be normal
                             result[i] = spaces[i].getPROPERTY().getPRICE();
                         } else if (owners.length == 1) {
@@ -441,7 +440,7 @@ public class AIPlayer implements Player {
                     throw new IllegalArgumentException("An invalid Property was passed");
                 }
             } else {
-                throw new IllegalArgumentException("An invalid Property was passed");
+                throw new IllegalArgumentException("An invalid prompt was passed");
             }
         } else {
             throw new IllegalArgumentException("A null description was passed");

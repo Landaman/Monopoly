@@ -12,10 +12,10 @@ public class Trade {
     private final Player RECEIVER; //The Player who receives the Trade
 
     //Trade fields
-    private ArrayList<Property> senderProperties; //The Properties that the sender is offering
-    private ArrayList<Property> receiverProperties; //The Properties that the receiver is offering
-    private ArrayList<Card> senderCards; //The Cards that the sender is offering
-    private ArrayList<Card> receiverCards; //The Cards the receiver is offering
+    private final ArrayList<Property> senderProperties; //The Properties that the sender is offering
+    private final ArrayList<Property> receiverProperties; //The Properties that the receiver is offering
+    private final ArrayList<Card> senderCards; //The Cards that the sender is offering
+    private final ArrayList<Card> receiverCards; //The Cards the receiver is offering
     private int senderMoney; //Stores the amount of money the sender is offering
     private int receiverMoney; //Stores the amount of money the receiver is offering
     private boolean isConfirmed; //Stores whether this Trade has been confirmed
@@ -29,21 +29,15 @@ public class Trade {
      */
     public Trade(Player sender, Player receiver, String prompt) {
         if (sender != null && receiver != null) {
-            if (receiver.promptBoolean(prompt, null)) {
-                SENDER = sender;
-                RECEIVER = receiver;
-                isConfirmed = false;
-                senderProperties = new ArrayList<>();
-                receiverProperties = new ArrayList<>();
-                senderCards = new ArrayList<>();
-                receiverCards = new ArrayList<>();
-                senderMoney = 0;
-                receiverMoney = 0;
-            } else {
-                SENDER = null;
-                RECEIVER = null;
-                isConfirmed = true;
-            }
+            SENDER = sender;
+            RECEIVER = receiver;
+            isConfirmed = false;
+            senderProperties = new ArrayList<>();
+            receiverProperties = new ArrayList<>();
+            senderCards = new ArrayList<>();
+            receiverCards = new ArrayList<>();
+            senderMoney = 0;
+            receiverMoney = 0;
         } else {
             throw new IllegalArgumentException("A null Player was passed");
         }
@@ -285,7 +279,7 @@ public class Trade {
      */
     public void removeSenderMoney(int amount) {
         if (!isConfirmed) {
-            if (amount < 0 && amount <= senderMoney) {
+            if (amount > 0 && amount <= senderMoney) {
                 senderMoney -= amount;
             } else {
                 throw new IllegalArgumentException("An invalid amount of money was passed");
@@ -304,7 +298,7 @@ public class Trade {
      */
     public void removeReceiverMoney(int amount) {
         if (!isConfirmed) {
-            if (amount < 0 && amount <= receiverMoney) {
+            if (amount > 0 && amount <= receiverMoney) {
                 receiverMoney -= amount;
             } else {
                 throw new IllegalArgumentException("An invalid amount of money was passed");

@@ -36,14 +36,6 @@ public class Deck {
     }
 
     /**
-     * Gets the type of the Deck
-     * @return the type of the Deck
-     */
-    public String getTYPE() {
-        return DEFAULT_DECK[0].getTYPE();
-    }
-
-    /**
      * Turns the deck passed into an ArrayList
      *
      * @param deck the Card[] that is to be returned as an ArrayList. This shouldn't be null and should contain
@@ -79,6 +71,15 @@ public class Deck {
         } else {
             throw new IllegalArgumentException("A null Cards ArrayList was passed");
         }
+    }
+
+    /**
+     * Gets the type of the Deck
+     *
+     * @return the type of the Deck
+     */
+    public String getTYPE() {
+        return DEFAULT_DECK[0].getTYPE();
     }
 
     /**

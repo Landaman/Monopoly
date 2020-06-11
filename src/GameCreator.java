@@ -17,67 +17,67 @@ import java.util.Arrays;
  */
 public class GameCreator extends JPanel implements ActionListener, ListSelectionListener, DocumentListener {
     //GameCreator fields
-    private MainUI mainUI; //Contains the MainUI Object that created this
-    private JList<String> list; //Contains the list of all of the Player's names
-    private DefaultListModel<String> listModel; //Contains the model that stores the Player's names
-    private JButton[] buttons; //Contains the buttons that manage Player creation
-    private JTextField textField; //Contains the text field that allows the user to input their Players name
-    private ArrayList<JComboBox<String>> comboBoxes; //Stores the combo boxes that allow the user to choose their Players type
-    private JPanel comboPanel; //Contains the combo boxes
-    private ArrayList<Color> colors; //Stores the Players Colors
-    private ArrayList<JButton> colorButtons; //Stores the buttons that allow the user to choose their Players Color
-    private JPanel colorPanel; //Contains the color buttons
+    private final MainUI MAIN_UI; //Contains the MainUI Object that created this
+    private final JList<String> PLAYER_LIST; //Contains the list of all of the Player's names
+    private final DefaultListModel<String> PLAYER_LIST_MODEL; //Contains the model that stores the Player's names
+    private final JButton[] BUTTONS; //Contains the buttons that manage Player creation
+    private final JTextField NAME_FIELD; //Contains the text field that allows the user to input their Players name
+    private final ArrayList<JComboBox<String>> TYPE_BOXES; //Stores the combo boxes that allow the user to choose their Players type
+    private final JPanel TYPE_PANEL; //Contains the combo boxes
+    private final ArrayList<Color> COLORS; //Stores the Players Colors
+    private final ArrayList<JButton> COLOR_BUTTONS; //Stores the buttons that allow the user to choose their Players Color
+    private final JPanel COLOR_PANEL; //Contains the color buttons
 
     public GameCreator(MainUI mainUI) {
         if (mainUI != null) {
-            this.mainUI = mainUI;
+            this.MAIN_UI = mainUI;
             setLayout(new BorderLayout());
 
             JLabel label = new JLabel("Add your players");
             add(label, BorderLayout.NORTH);
 
             JPanel centerPanel = new JPanel();
-            listModel = new DefaultListModel<>();
-            list = new JList<>(listModel);
-            list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            list.setVisibleRowCount(-1);
-            list.addListSelectionListener(this);
-            centerPanel.add(list);
+            PLAYER_LIST_MODEL = new DefaultListModel<>();
+            PLAYER_LIST = new JList<>(PLAYER_LIST_MODEL);
+            PLAYER_LIST.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            PLAYER_LIST.setVisibleRowCount(-1);
+            PLAYER_LIST.addListSelectionListener(this);
+            centerPanel.add(PLAYER_LIST);
 
-            comboBoxes = new ArrayList<>();
-            comboPanel = new JPanel();
-            comboPanel.setLayout(new BoxLayout(comboPanel, BoxLayout.Y_AXIS));
-            centerPanel.add(comboPanel);
+            TYPE_BOXES = new ArrayList<>();
+            TYPE_PANEL = new JPanel();
+            TYPE_PANEL.setLayout(new BoxLayout(TYPE_PANEL, BoxLayout.Y_AXIS));
+            centerPanel.add(TYPE_PANEL);
 
-            colors = new ArrayList<>();
-            colorButtons = new ArrayList<>();
-            colorPanel = new JPanel();
-            colorPanel.setLayout(new BoxLayout(colorPanel, BoxLayout.Y_AXIS));
-            centerPanel.add(colorPanel);
+            COLORS = new ArrayList<>();
+            COLOR_BUTTONS = new ArrayList<>();
+            COLOR_PANEL = new JPanel();
+            COLOR_PANEL.setLayout(new BoxLayout(COLOR_PANEL, BoxLayout.Y_AXIS));
+            centerPanel.add(COLOR_PANEL);
 
             add(centerPanel, BorderLayout.CENTER);
 
             JPanel controlPanel = new JPanel();
 
-            buttons = new JButton[3];
-            buttons[0] = new JButton("Add");
-            buttons[0].addActionListener(this);
-            buttons[0].setEnabled(false);
-            buttons[1] = new JButton("Remove");
-            buttons[1].addActionListener(this);
-            buttons[1].setEnabled(false);
-            buttons[2] = new JButton("Continue");
-            buttons[2].addActionListener(this);
-            buttons[2].setEnabled(false);
+            BUTTONS = new JButton[3];
+            BUTTONS[0] = new JButton("Add");
+            BUTTONS[0].addActionListener(this);
+            BUTTONS[0].setEnabled(false);
+            BUTTONS[1] = new JButton("Remove");
+            BUTTONS[1].addActionListener(this);
+            BUTTONS[1].setEnabled(false);
+            BUTTONS[2] = new JButton("Continue");
+            BUTTONS[2].addActionListener(this);
+            BUTTONS[2].setEnabled(false);
 
-            textField = new JTextField(20);
-            textField.setEditable(true);
-            textField.getDocument().addDocumentListener(this);
+            NAME_FIELD = new JTextField(20);
+            NAME_FIELD.setEditable(true);
+            NAME_FIELD.getDocument().addDocumentListener(this);
 
-            controlPanel.add(buttons[1]);
-            controlPanel.add(textField);
-            controlPanel.add(buttons[0]);
-            controlPanel.add(buttons[2]);
+            controlPanel.add(BUTTONS[1]);
+            controlPanel.add(NAME_FIELD);
+            controlPanel.add(BUTTONS[0]);
+            controlPanel.add(BUTTONS[2]);
             add(controlPanel, BorderLayout.SOUTH);
         } else {
             throw new IllegalArgumentException("A null parameter was passed");
@@ -85,116 +85,12 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
     }
 
     /**
-     * Determines if the Players are in a valid state to finish setup
-     * @return if the Players are in a valid state to finish setup
-     */
-    private boolean canContinue() {
-        if (listModel.size() > 1) { //First we check if there are any Players
-            boolean hasHuman = false;
-            for (JComboBox<String> comboBox : comboBoxes) { //Then we make sure there is at least one human
-                if (comboBox.getSelectedIndex() == 0) {
-                    hasHuman = true;
-                    break;
-                }
-            }
-
-            if (hasHuman) {
-                for (int i = 0; i < colors.size(); i++) { //Then we make sure there are no identical colors or names
-                    for (int j = 0; j < colors.size(); j++) {
-                        if (i != j && colors.get(i).getRed() == colors.get(j).getRed() && colors.get(i).getBlue() ==
-                                colors.get(j).getBlue() && colors.get(i).getGreen() == colors.get(j).getGreen()) {
-                            return false;
-                        }
-                        if (i != j && listModel.get(i).equals(listModel.get(j))) {
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Invoked when an action occurs.
-     *
-     * @param e the event to be processed
-     */
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == buttons[0]) { //If this is the case, the user wants to add a new Player
-            listModel.add(listModel.getSize(), textField.getText());
-            textField.setText("");
-            buttons[0].setEnabled(false);
-            JComboBox<String> comboBox = new JComboBox<>(new String[] {"Human Player", "AI Player"});
-            comboBox.addActionListener(this);
-            comboBoxes.add(comboBox);
-            comboPanel.add(comboBox);
-            JButton button = new JButton();
-            button.setBackground(Color.white);
-            button.addActionListener(this);
-            colorButtons.add(button);
-            colorPanel.add(button);
-            colors.add(Color.white);
-            buttons[2].setEnabled(canContinue());
-        } else if (e.getSource() == buttons[1]) { //If this is the case, the user wants to remove an index
-            comboPanel.remove(comboBoxes.remove(list.getSelectedIndex()));
-            colors.remove(list.getSelectedIndex());
-            colorPanel.remove(colorButtons.remove(list.getSelectedIndex()));
-            listModel.remove(list.getSelectedIndex());
-            list.clearSelection();
-            buttons[1].setEnabled(false);
-            buttons[2].setEnabled(canContinue());
-        } else if (comboBoxes.contains(e.getSource())){ //If this is the case the user interacted with a combo box
-            buttons[2].setEnabled(canContinue());
-        } else if (colorButtons.contains(e.getSource())) {
-            Color pickedColor = JColorChooser.showDialog(this, "Pick your player's color: ",
-                    colors.get(colorButtons.indexOf(e.getSource())));
-            if (pickedColor != null) {
-                colors.set(colorButtons.indexOf(e.getSource()), pickedColor);
-                ((JButton) e.getSource()).setBackground(pickedColor);
-                buttons[2].setEnabled(canContinue());
-            }
-        } else if (e.getSource() == buttons[2]) { //This goes on an actually sets up the Game
-            String[] playerNames  = new String[listModel.getSize()];
-            for (int i = 0; i < playerNames.length; i++) {
-                playerNames[i] = listModel.get(i);
-
-            }
-            String[] playerTypes = new String[listModel.getSize()];
-            for (int i = 0; i < playerTypes.length; i++) {
-                playerTypes[i] = comboBoxes.get(i).getSelectedIndex() == 0? "Human Player" : "AI Player";
-            }
-            mainUI.setupGame(playerNames, playerTypes, colors.toArray(new Color[0]));
-        }
-    }
-
-    /**
-     * Called whenever the value of the selection changes.
-     *
-     * @param e the event that characterizes the change.
-     */
-    @Override
-    public void valueChanged(ListSelectionEvent e) { //If this is the case, the user interacted with the list
-        if (e.getSource() == list) {
-            buttons[1].setEnabled(list.getSelectedIndex() != -1);
-        }
-    }
-
-    /*
-    The following methods manage initialization of the Game Class. They are static
-     */
-
-    /**
      * Makes a Game out of the default values
-     * @param playerNames the names of the Players
-     * @param playerTypes the types of the Players
+     *
+     * @param playerNames  the names of the Players
+     * @param playerTypes  the types of the Players
      * @param playerColors the Players colors
-     * @param gameUI the Game's UI
+     * @param gameUI       the Game's UI
      */
     public static Game makeGame(String[] playerNames, String[] playerTypes, Color[] playerColors, GameUI gameUI) {
         int[] playerWallets = new int[playerNames.length];
@@ -265,43 +161,6 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
 
         return new Game(spaces, colorGroups, jailPosition, bailCost, players, dice, deck, gameUI, prompts);
     }
-
-    /**
-     * Gives notification that there was an insert into the document.  The
-     * range given by the DocumentEvent bounds the freshly inserted region.
-     *
-     * @param e the document event
-     */
-    @Override
-    public void insertUpdate(DocumentEvent e) {
-        buttons[0].setEnabled(textField.getText() != null && !textField.getText().equals(""));
-    }
-
-    /**
-     * Gives notification that a portion of the document has been
-     * removed.  The range is given in terms of what the view last
-     * saw (that is, before updating sticky positions).
-     *
-     * @param e the document event
-     */
-    @Override
-    public void removeUpdate(DocumentEvent e) {
-        buttons[0].setEnabled(textField.getText() != null && !textField.getText().equals(""));
-    }
-
-    /**
-     * Gives notification that an attribute or set of attributes changed.
-     *
-     * @param e the document event
-     */
-    @Override
-    public void changedUpdate(DocumentEvent e) {
-
-    }
-
-    /*
-    The following methods manage Space creation
-     */
 
     /**
      * Sets up an Array of Spaces. Validates according to the conditions outlined here. All of these Arrays should have
@@ -445,10 +304,6 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
         }
     }
 
-    /*
-    The following methods manage Player creation
-     */
-
     /**
      * Sets up an Array of Players. Validates according to the conditions outlined here. All of these Arrays
      * should have the same length
@@ -467,7 +322,7 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
      * @param gameBoard      the game board for use in the AIPlayer Class
      * @param colorGroups    the color groups used in the game board for the AIPLayer Class
      * @param gameUI         the UI for the Game for the HumanPlayer Class
-     * @param colors the Colors of the Players
+     * @param colors         the Colors of the Players
      * @return the created Players Array
      * @throws IllegalArgumentException when a null or mismatched Array is passed
      */
@@ -508,7 +363,7 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
      * @param gameBoard      the game board for use in the AIPlayer Class
      * @param colorGroups    the color groups on the game board for use in the AIPlayer Class
      * @param gameUI         the UI for the Game. Used in the HumanPlayer Class
-     * @param color the Color of this Player
+     * @param color          the Color of this Player
      * @return the created Player Object
      * @throws IllegalArgumentException when type is not ai or human
      */
@@ -527,7 +382,7 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
     }
 
     /*
-    The following methods manage Dice creation
+    The following methods manage initialization of the Game Class. They are static
      */
 
     /**
@@ -549,10 +404,6 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
             throw new IllegalArgumentException("A negative numDice value was passed");
         }
     }
-
-    /*
-    The following methods manage Deck setup
-     */
 
     /**
      * Sets up an Array of Decks. Validates according to the conditions outlined here. None of these Arrays can be null,
@@ -604,6 +455,10 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
 
     }
 
+    /*
+    The following methods manage Space creation
+     */
+
     /**
      * Sets up a Deck. Validates according to the conditions outlined here. None of these Arrays can be null,
      * but the values in them may be null
@@ -651,5 +506,195 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
             throw new IllegalArgumentException("A null or mismatched Array was passed");
         }
 
+    }
+
+    /**
+     * Determines if the Players are in a valid state to finish setup
+     *
+     * @return if the Players are in a valid state to finish setup
+     */
+    private boolean canContinue() {
+        if (PLAYER_LIST_MODEL.size() > 1) { //First we check if there are any Players
+            boolean hasHuman = false;
+            for (JComboBox<String> comboBox : TYPE_BOXES) { //Then we make sure there is at least one human
+                if (comboBox.getSelectedIndex() == 0) {
+                    hasHuman = true;
+                    break;
+                }
+            }
+
+            if (hasHuman) {
+                for (int i = 0; i < COLORS.size(); i++) { //Then we make sure there are no identical colors
+                    for (int j = 0; j < COLORS.size(); j++) {
+                        if (i != j && COLORS.get(i).getRed() == COLORS.get(j).getRed() && COLORS.get(i).getBlue() ==
+                                COLORS.get(j).getBlue() && COLORS.get(i).getGreen() == COLORS.get(j).getGreen()) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /*
+    The following methods manage Player creation
+     */
+
+    /**
+     * Invoked when an action occurs.
+     *
+     * @param e the event to be processed
+     */
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == BUTTONS[0]) { //If this is the case, the user wants to add a new Player
+            PLAYER_LIST_MODEL.add(PLAYER_LIST_MODEL.getSize(), NAME_FIELD.getText());
+            NAME_FIELD.setText("");
+            BUTTONS[0].setEnabled(false);
+            JComboBox<String> comboBox = new JComboBox<>(new String[]{"Human Player", "AI Player"});
+            comboBox.addActionListener(this);
+            TYPE_BOXES.add(comboBox);
+            TYPE_PANEL.add(comboBox);
+            JButton button = new JButton();
+            button.setBackground(Color.white);
+            button.addActionListener(this);
+            COLOR_BUTTONS.add(button);
+            COLOR_PANEL.add(button);
+            COLORS.add(Color.white);
+            BUTTONS[2].setEnabled(canContinue());
+        } else if (e.getSource() == BUTTONS[1]) { //If this is the case, the user wants to remove an index
+            TYPE_PANEL.remove(TYPE_BOXES.remove(PLAYER_LIST.getSelectedIndex()));
+            COLORS.remove(PLAYER_LIST.getSelectedIndex());
+            COLOR_PANEL.remove(COLOR_BUTTONS.remove(PLAYER_LIST.getSelectedIndex()));
+            PLAYER_LIST_MODEL.remove(PLAYER_LIST.getSelectedIndex());
+            PLAYER_LIST.clearSelection();
+            BUTTONS[1].setEnabled(false);
+            BUTTONS[2].setEnabled(canContinue());
+        } else if (TYPE_BOXES.contains(e.getSource())) { //If this is the case the user interacted with a combo box
+            BUTTONS[2].setEnabled(canContinue());
+        } else if (COLOR_BUTTONS.contains(e.getSource())) {
+            Color pickedColor = JColorChooser.showDialog(this, "Pick your player's color: ",
+                    COLORS.get(COLOR_BUTTONS.indexOf(e.getSource())));
+            if (pickedColor != null) {
+                COLORS.set(COLOR_BUTTONS.indexOf(e.getSource()), pickedColor);
+                ((JButton) e.getSource()).setBackground(pickedColor);
+                BUTTONS[2].setEnabled(canContinue());
+            }
+        } else if (e.getSource() == BUTTONS[2]) { //This goes on an actually sets up the Game
+            String[] playerNames = new String[PLAYER_LIST_MODEL.getSize()];
+            for (int i = 0; i < playerNames.length; i++) {
+                playerNames[i] = PLAYER_LIST_MODEL.get(i);
+
+            }
+            String[] playerTypes = new String[PLAYER_LIST_MODEL.getSize()];
+            for (int i = 0; i < playerTypes.length; i++) {
+                playerTypes[i] = TYPE_BOXES.get(i).getSelectedIndex() == 0 ? "Human Player" : "AI Player";
+            }
+            MAIN_UI.setupGame(playerNames, playerTypes, COLORS.toArray(new Color[0]));
+        }
+    }
+
+    /**
+     * Called whenever the value of the selection changes.
+     *
+     * @param e the event that characterizes the change.
+     */
+    @Override
+    public void valueChanged(ListSelectionEvent e) { //If this is the case, the user interacted with the list
+        boolean matchFound = false;
+        for (int i = 0; i < PLAYER_LIST_MODEL.size(); i++) {
+            if (NAME_FIELD.getText().equals(PLAYER_LIST_MODEL.get(i))) {
+                matchFound = true;
+                break;
+            }
+        }
+
+        if (!matchFound) {
+            BUTTONS[0].setEnabled(NAME_FIELD.getText() != null && !NAME_FIELD.getText().equals(""));
+        } else {
+            BUTTONS[0].setEnabled(false);
+        }
+    }
+
+    /*
+    The following methods manage Dice creation
+     */
+
+    /**
+     * Gives notification that there was an insert into the document.  The
+     * range given by the DocumentEvent bounds the freshly inserted region.
+     *
+     * @param e the document event
+     */
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        boolean matchFound = false;
+        for (int i = 0; i < PLAYER_LIST_MODEL.size(); i++) {
+            if (NAME_FIELD.getText().equals(PLAYER_LIST_MODEL.get(i))) {
+                matchFound = true;
+                break;
+            }
+        }
+
+        if (!matchFound) {
+            BUTTONS[0].setEnabled(NAME_FIELD.getText() != null && !NAME_FIELD.getText().equals(""));
+        } else {
+            BUTTONS[0].setEnabled(false);
+        }
+    }
+
+    /*
+    The following methods manage Deck setup
+     */
+
+    /**
+     * Gives notification that a portion of the document has been
+     * removed.  The range is given in terms of what the view last
+     * saw (that is, before updating sticky positions).
+     *
+     * @param e the document event
+     */
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        boolean matchFound = false;
+        for (int i = 0; i < PLAYER_LIST_MODEL.size(); i++) {
+            if (NAME_FIELD.getText().equals(PLAYER_LIST_MODEL.get(i))) {
+                matchFound = true;
+                break;
+            }
+        }
+
+        if (!matchFound) {
+            BUTTONS[0].setEnabled(NAME_FIELD.getText() != null && !NAME_FIELD.getText().equals(""));
+        } else {
+            BUTTONS[0].setEnabled(false);
+        }
+    }
+
+    /**
+     * Gives notification that an attribute or set of attributes changed.
+     *
+     * @param e the document event
+     */
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        boolean matchFound = false;
+        for (int i = 0; i < PLAYER_LIST_MODEL.size(); i++) {
+            if (NAME_FIELD.getText().equals(PLAYER_LIST_MODEL.get(i))) {
+                matchFound = true;
+                break;
+            }
+        }
+
+        if (!matchFound) {
+            BUTTONS[0].setEnabled(NAME_FIELD.getText() != null && !NAME_FIELD.getText().equals(""));
+        } else {
+            BUTTONS[0].setEnabled(false);
+        }
     }
 }

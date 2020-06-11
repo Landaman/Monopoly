@@ -5,11 +5,12 @@ import java.awt.event.ActionListener;
 
 /**
  * The main UI component of the monopoly game
+ *
  * @author irswr
  */
 public class MainUI extends JFrame implements ActionListener {
+    //Main UI fields
     private final JButton[] BUTTONS; //Contains the buttons for use in the menu
-    private GameCreator gameCreator; //Contains the GameCreator Object that is managing game creation
     private final CardLayout CARD_LAYOUT; //Contains the Layout Manager that is managing the currently displayed panel
 
     /**
@@ -51,22 +52,24 @@ public class MainUI extends JFrame implements ActionListener {
     }
 
     /**
+     * Initializes the program
+     *
+     * @param args the args for the program. These are unused
+     */
+    public static void main(String[] args) {
+        JFrame frame = new MainUI();
+    }
+
+    /**
      * Sets up a Default game
-     * @param playerNames the names of the Players
-     * @param playerTypes the types of the Players
+     *
+     * @param playerNames  the names of the Players
+     * @param playerTypes  the types of the Players
      * @param playerColors the Colors of the Player
      */
     public void setupGame(String[] playerNames, String[] playerTypes, Color[] playerColors) {
         add(new GameUI(playerNames, playerTypes, playerColors, this), "game ui");
         CARD_LAYOUT.show(this.getContentPane(), "game ui");
-    }
-
-    /**
-     * Initializes the program
-     * @param args the args for the program. These are unused
-     */
-    public static void main(String[] args) {
-        JFrame frame = new MainUI();
     }
 
     /**
@@ -78,7 +81,7 @@ public class MainUI extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == BUTTONS[0]) {
             CARD_LAYOUT.show(this.getContentPane(), "game creator");
-        } else if (e.getSource() == BUTTONS[1]){
+        } else if (e.getSource() == BUTTONS[1]) {
             //TODO: Implement this
         } else if (e.getSource() == BUTTONS[2]) {
             System.exit(0);

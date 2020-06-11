@@ -32,7 +32,7 @@ public class HumanPlayer implements Player {
      * @param salary           the salary the Player should be awarded for each turn
      * @param numTurnsInJail   the number of turns the Player should be in jail for when they go
      * @param gameUI           the UI for the Game
-     * @param color the Players color
+     * @param color            the Players color
      * @throws IllegalArgumentException when invalid parameters are passed
      */
     public HumanPlayer(String name, int startingWallet, int startingPosition, int boardSize, int turnsJail,
