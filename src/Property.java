@@ -50,7 +50,7 @@ public class Property {
                 startingHouses >= 0 && startingHouses <= maxHouses &&
                 !(isScaled && maxHouses != 0) && !(startingHouses > 0 && propertyOwner == null) &&
                 !(!isScaled && rents.length != maxHouses + 2) && !(mortgaged && propertyOwner == null) &&
-                name != null) {
+                name != null && mortgagePercent >= 0.0 && mortgagePercent <= 1.0) {
             PRICE = price;
             MORTGAGE = mortgage;
             MORTGAGE_PERCENT = mortgagePercent;

@@ -1456,6 +1456,7 @@ public class Game {
             }
 
             if (startingPlayerNumber != PLAYERS.size()) { //If this is the case the Player has gone bankrupt, meaning they shouldn't be allowed to do anything else
+                GAME_UI.displayMessage("You have gone bankrupt!");
                 return;
             }
 
