@@ -43,7 +43,7 @@ public class GameUI extends JPanel implements ActionListener {
 
             JPanel buttonPanel = new JPanel();
             BUTTONS = new JButton[7];
-            BUTTONS[0] = new JButton("End Turn");
+            BUTTONS[0] = new JButton("Begin!");
             BUTTONS[0].addActionListener(this);
             buttonPanel.add(BUTTONS[0]);
             BUTTONS[1] = new JButton("Show All Properties");
@@ -73,8 +73,6 @@ public class GameUI extends JPanel implements ActionListener {
             add(buttonPanel, BorderLayout.SOUTH);
 
             MAIN_UI = mainUI;
-
-            GAME.doTurn();
         } else {
             throw new IllegalArgumentException("A null MainUI was passed");
         }
@@ -178,7 +176,7 @@ public class GameUI extends JPanel implements ActionListener {
 
             JPanel buttonPanel = new JPanel();
             BUTTONS = new JButton[7];
-            BUTTONS[0] = new JButton("End Turn");
+            BUTTONS[0] = new JButton("Begin!");
             BUTTONS[0].addActionListener(this);
             buttonPanel.add(BUTTONS[0]);
             BUTTONS[1] = new JButton("Show All Properties");
@@ -208,8 +206,6 @@ public class GameUI extends JPanel implements ActionListener {
             add(buttonPanel, BorderLayout.SOUTH);
 
             MAIN_UI = mainUI;
-
-            GAME.doTurn();
         } else {
             throw new IllegalArgumentException("A null MainUI was passed");
         }
@@ -224,6 +220,7 @@ public class GameUI extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == BUTTONS[0]) {
+            BUTTONS[0].setText("End Turn");
             GAME.doTurn();
         } else if (e.getSource() == BUTTONS[1]) {
             new PropertySelectionDialog(Game.getProperties(GAME.getGAME_BOARD()));
@@ -301,18 +298,13 @@ public class GameUI extends JPanel implements ActionListener {
                 viewer.setPreferredSize(new Dimension(400, 200));
                 panel.add(viewer);
                 int result;
-                String o;
-                while (true) {
-                    o = JOptionPane.showInputDialog(MAIN_UI, panel, description);
-
-                    try {
-                        result = Integer.parseInt(o);
-                        break;
-                    } catch (NumberFormatException ignored) {
-
-                    }
+                String s = JOptionPane.showInputDialog(MAIN_UI, panel, description);
+                try {
+                    result = Integer.parseInt(s);
+                    return result;
+                } catch (NumberFormatException e) {
+                    return -1;
                 }
-                return result;
             } else if (object != null && object.getClass() == Auction.class) {
                 JPanel panel = new JPanel();
                 panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -321,32 +313,22 @@ public class GameUI extends JPanel implements ActionListener {
                 viewer.setPreferredSize(new Dimension(400, 800));
                 panel.add(viewer);
                 int result;
-                String o;
-                while (true) {
-                    o = JOptionPane.showInputDialog(MAIN_UI, panel, description);
-
-                    try {
-                        result = Integer.parseInt(o);
-                        break;
-                    } catch (NumberFormatException ignored) {
-
-                    }
+                String s = JOptionPane.showInputDialog(MAIN_UI, panel, description);
+                try {
+                    result = Integer.parseInt(s);
+                    return result;
+                } catch (NumberFormatException e) {
+                    return -1;
                 }
-                return result;
             } else {
                 int result;
-                String o;
-                while (true) {
-                    o = JOptionPane.showInputDialog(MAIN_UI, description, description);
-
-                    try {
-                        result = Integer.parseInt(o);
-                        break;
-                    } catch (NumberFormatException ignored) {
-
-                    }
+                String s = JOptionPane.showInputDialog(MAIN_UI, description, description);
+                try {
+                    result = Integer.parseInt(s);
+                    return result;
+                } catch (NumberFormatException e) {
+                    return -1;
                 }
-                return result;
             }
         } else {
             throw new IllegalArgumentException("A null description was passed");
@@ -442,6 +424,10 @@ public class GameUI extends JPanel implements ActionListener {
         CURRENT_PLAYER.setText(GAME.getCurrentPlayer().toString());
         WALLET.setText("$" + GAME.getCurrentPlayer().getWallet());
         GAME_GRAPHICS.repaint();
+        if (GAME.getPLAYERS().length == 1) { //If this is the case we have a winner!
+            JOptionPane.showMessageDialog(MAIN_UI, GAME.getCurrentPlayer() + " has won!");
+            System.exit(0);
+        }
     }
 
     /**

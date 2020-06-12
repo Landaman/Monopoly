@@ -1426,11 +1426,11 @@ public class Game {
     public void doTurn() {
         updatePropertiesRent(GAME_BOARD); //This just refreshes all of the rents to account for any changes that occurred last turn
         GAME_UI.update();
-        if (currentPlayer >= 0 && currentPlayer < PLAYERS.size() && PLAYERS.get(currentPlayer).getWallet() >= 0 &&
-                PLAYERS.size() > 1) {
+        if (currentPlayer >= 0 && currentPlayer < PLAYERS.size() && PLAYERS.get(currentPlayer).getWallet() >= 0) {
             if (shouldGoToNextPlayer) {
                 nextPlayer();
             }
+            GAME_UI.update();
             Player player = PLAYERS.get(currentPlayer);
             boolean playerStartsInJail = player.getTurnInJail() > 0;
             int startingPosition = player.getPosition();
