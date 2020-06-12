@@ -125,29 +125,29 @@ public class CustomGameCreator extends JPanel implements ActionListener {
             if (currentStage == 0) {
                 MAIN_UI.showMenu();
             } else if (currentStage == 1) {
-                if (((DecksSetupPage) panels[0]).canGoBack()) {
+                if (((DecksSetupPage) panels[1]).canGoBack()) {
                     CARD_LAYOUT.show(MAIN_PANEL, "space setup");
-                    currentStage--;
-                    MAIN_PANEL.remove(panels[0]);
-                    panels[0] = null;
-                }
-            } else if (currentStage == 2) {
-                if (((PropertySetupPage) panels[1]).canGoBack()) {
-                    CARD_LAYOUT.show(MAIN_PANEL, "card setup");
                     currentStage--;
                     MAIN_PANEL.remove(panels[1]);
                     panels[1] = null;
                 }
+            } else if (currentStage == 2) {
+                if (((PropertySetupPage) panels[2]).canGoBack()) {
+                    CARD_LAYOUT.show(MAIN_PANEL, "card setup");
+                    currentStage--;
+                    MAIN_PANEL.remove(panels[2]);
+                    panels[2] = null;
+                }
             } else if (currentStage == 3) {
                 CARD_LAYOUT.show(MAIN_PANEL, "property setup");
                 currentStage--;
-                MAIN_PANEL.remove(panels[2]);
-                panels[2] = null;
+                MAIN_PANEL.remove(panels[3]);
+                panels[3] = null;
             } else if (currentStage == 4) {
                 CARD_LAYOUT.show(MAIN_PANEL, "game setup");
                 currentStage--;
-                MAIN_PANEL.remove(panels[3]);
-                panels[3] = null;
+                MAIN_PANEL.remove(panels[4]);
+                panels[4] = null;
             }
         } else if (e.getSource() == CONTINUE) {
             if (currentStage == 0) {
@@ -2245,6 +2245,10 @@ public class CustomGameCreator extends JPanel implements ActionListener {
             if (currentState == -1) {
                 for (int i = 0; i < TYPE_FIELDS.length; i++) {
                     for (int j = 0; j < TYPE_FIELDS.length; j++) {
+                        if (TYPE_FIELDS[i].getText() == null || TYPE_FIELDS[i].getText().equals("")) {
+                            JOptionPane.showMessageDialog(MAIN_UI, "Invalid types");
+                            return false;
+                        }
                         if (i != j && TYPE_FIELDS[i].getText().equals(TYPE_FIELDS[j].getText())) {
                             JOptionPane.showMessageDialog(MAIN_UI, "Invalid types");
                             return false;
@@ -2458,7 +2462,7 @@ public class CustomGameCreator extends JPanel implements ActionListener {
      *
      * @author irswr
      */
-    private class DeckSetupPage extends JPanel implements ActionListener {
+    private class DeckSetupPage extends JPanel implements ActionListener, DocumentListener {
         //DeckSetupPage constants
         private final ArrayList<CardSetup> CARD_SETUPS; //Stores the setup for the Spaces
         private final ArrayList<JButton> REMOVE_BUTTONS; //Stores the remove buttons for each Space
@@ -2486,6 +2490,7 @@ public class CustomGameCreator extends JPanel implements ActionListener {
 
                 JPanel buttonPanel = new JPanel();
                 NAME_FIELD = new JTextField(20);
+                NAME_FIELD.getDocument().addDocumentListener(this);
                 buttonPanel.add(NAME_FIELD);
 
                 ADD_BUTTON = new JButton("Add");
@@ -2682,6 +2687,39 @@ public class CustomGameCreator extends JPanel implements ActionListener {
                 getOutJail[i] = CARD_SETUPS.get(i).getIS_JAIL_CARD();
             }
             return getOutJail;
+        }
+
+        /**
+         * Gives notification that there was an insert into the document.  The
+         * range given by the DocumentEvent bounds the freshly inserted region.
+         *
+         * @param e the document event
+         */
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            ADD_BUTTON.setEnabled(NAME_FIELD.getText() != null && !NAME_FIELD.getText().equals(""));
+        }
+
+        /**
+         * Gives notification that a portion of the document has been
+         * removed.  The range is given in terms of what the view last
+         * saw (that is, before updating sticky positions).
+         *
+         * @param e the document event
+         */
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            ADD_BUTTON.setEnabled(NAME_FIELD.getText() != null && !NAME_FIELD.getText().equals(""));
+        }
+
+        /**
+         * Gives notification that an attribute or set of attributes changed.
+         *
+         * @param e the document event
+         */
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            ADD_BUTTON.setEnabled(NAME_FIELD.getText() != null && !NAME_FIELD.getText().equals(""));
         }
     }
 }
