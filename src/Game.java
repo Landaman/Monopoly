@@ -424,7 +424,11 @@ public class Game {
                         }
                     }
                 } else {
-                    result.addAll(Arrays.asList(playerPropertiesInColorGroup(colorGroup, spaces, player)));
+                    for (Property property : playerPropertiesInColorGroup(colorGroup, spaces, player)) {
+                        if (property.canSell()) {
+                            result.add(property);
+                        }
+                    }
                 }
             }
             return result.toArray(new Property[0]);
@@ -558,7 +562,7 @@ public class Game {
             int closestIndex = -1;
             for (int i = startingIndex; i < spaces.length; i++) { //First we'll go forwards
                 if (spaces[i] != null) {
-                    if (spaces[i].getCOLOR_GROUP().equals(colorGroup)) {
+                    if (spaces[i].getPROPERTY() != null && spaces[i].getPROPERTY().getCOLOR_GROUP().equals(colorGroup)) {
                         closestIndex = i;
                         break;
                     }
