@@ -423,6 +423,8 @@ public class Game {
                             }
                         }
                     }
+                } else {
+                    result.addAll(Arrays.asList(playerPropertiesInColorGroup(colorGroup, spaces, player)));
                 }
             }
             return result.toArray(new Property[0]);

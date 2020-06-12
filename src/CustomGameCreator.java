@@ -516,6 +516,9 @@ public class CustomGameCreator extends JPanel implements ActionListener {
         public SpaceSetupPage() {
             setLayout(new BorderLayout());
 
+            JLabel label = new JLabel("Add your spaces");
+            add(label, BorderLayout.NORTH);
+
             CENTER_PANEL = new JPanel();
             CENTER_PANEL.setLayout(new BoxLayout(CENTER_PANEL, BoxLayout.Y_AXIS));
             add(CENTER_PANEL, BorderLayout.CENTER);
@@ -893,16 +896,23 @@ public class CustomGameCreator extends JPanel implements ActionListener {
                     SPACE_LOSS.setEnabled(true);
                 }
             } else if (e.getSource() == RENT_MULTIPLIER) {
-                setMovementEnabled((Double) RENT_MULTIPLIER.getValue() == 1.0);
+                if ((Double) RENT_MULTIPLIER.getValue() == 1.0) {
+                    setMovementEnabled(true);
+                    ROLL_MULTIPLIER.setEnabled(false);
+                } else if ((Double) RENT_MULTIPLIER.getValue() == 0.0) {
+                    setMovementEnabled(false);
+                    ROLL_MULTIPLIER.setEnabled(true);
+                } else {
+                    setMovementEnabled(false);
+                    ROLL_MULTIPLIER.setEnabled(false);
+                }
             } else if (e.getSource() == ROLL_MULTIPLIER) {
                 if ((Double) ROLL_MULTIPLIER.getValue() == 0.0) {
                     setMovementEnabled(true);
                     RENT_MULTIPLIER.setEnabled(true);
-                    RENT_MULTIPLIER.setValue(1.0);
                 } else {
                     setMovementEnabled(false);
                     RENT_MULTIPLIER.setEnabled(false);
-                    RENT_MULTIPLIER.setValue(0.0);
                 }
             } else if (e.getSource() == PER_HOUSES) {
                 if ((Integer) PER_HOUSES.getValue() == 0) {
@@ -1500,6 +1510,8 @@ public class CustomGameCreator extends JPanel implements ActionListener {
          */
         public PlayerSetupPage() {
             setLayout(new BorderLayout());
+            JLabel label = new JLabel("Add your playrers");
+            add(label, BorderLayout.NORTH);
 
             JPanel buttonPanel = new JPanel();
             NAME_FIELD = new JTextField(20);
@@ -1514,6 +1526,7 @@ public class CustomGameCreator extends JPanel implements ActionListener {
 
             PLAYER_PANEL = new JPanel();
             PLAYER_PANEL.setLayout(new BoxLayout(PLAYER_PANEL, BoxLayout.Y_AXIS));
+            add(PLAYER_PANEL, BorderLayout.CENTER);
 
             PLAYER_SETUPS = new ArrayList<>();
             REMOVE_BUTTONS = new ArrayList<>();
@@ -2461,6 +2474,8 @@ public class CustomGameCreator extends JPanel implements ActionListener {
             if (type != null && type.length() > 0) {
                 TYPE = type;
                 setLayout(new BorderLayout());
+                JLabel label = new JLabel("Add your decks");
+                add(label, BorderLayout.NORTH);
 
                 CENTER_PANEL = new JPanel();
                 CENTER_PANEL.setLayout(new BoxLayout(CENTER_PANEL, BoxLayout.Y_AXIS));

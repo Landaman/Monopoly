@@ -517,7 +517,7 @@ public class GameUI extends JPanel implements ActionListener {
             button.addActionListener(e -> dialog.setVisible(false));
             panel.add(button, BorderLayout.SOUTH);
             dialog.setContentPane(panel);
-            dialog.setBounds(100, 100, 200, 100);
+            dialog.setBounds(100, 100, 400, 100);
             dialog.setVisible(true);
         } else {
             throw new IllegalArgumentException("A null Property was passed");
