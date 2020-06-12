@@ -115,7 +115,7 @@ public class GameCreator extends JPanel implements ActionListener, ListSelection
         int[] playerSalaries = new int[playerNames.length];
         Arrays.fill(playerSalaries, Defaults.getPlayerSalary());
         int[] playerJailTurns = new int[playerNames.length];
-        Arrays.fill(playerSalaries, Defaults.getPlayerJailTime());
+        Arrays.fill(playerJailTurns, Defaults.getPlayerJailTime());
         return makeGame(Defaults.getSpaceNames(), Defaults.getSpaceMoneyLosses(), Defaults.getSpaceMovementLosses(),
                 Defaults.getSpaceSpaceLosses(), Defaults.getSpaceColorGroups(), Defaults.getSpaceRentMultipliers(),
                 Defaults.getSpaceRollMultipliers(), Defaults.getSpaceDeckUsed(), Defaults.getSpacePerHouse(),
